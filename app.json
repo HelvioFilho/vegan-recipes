@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Receitas Veganas",
+    "slug": "vegan-recipes",
+    "version": "1.0.0",
+    "scheme": "vegan-recipes",
+    "plugins": [
+      "expo-router",
+      [
+        "expo-dev-launcher",
+        {
+          "launchMode": "most-recent"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "tsconfigPaths": true
+    },
+    "orientation": "portrait",
+    "icon": "./src/assets/main/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./src/assets/main/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#6AA061"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.hsvf.veganrecipes"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/main/adaptive-icon.png",
+        "backgroundColor": "#6AA061"
+      },
+      "package": "com.hsvf.veganrecipes"
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "1017e830-e22e-4896-b762-7f05eff6ebd3"
+      }
+    }
+  }
+}
