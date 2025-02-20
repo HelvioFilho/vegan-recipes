@@ -68,6 +68,8 @@ Download now and start cooking up a healthier, kinder world!
 
 ## Application
 
+[![codecov](https://codecov.io/gh/HelvioFilho/vegan-recipes/graph/badge.svg?token=SS50QFXQZV)](https://codecov.io/gh/HelvioFilho/vegan-recipes)
+
 The app is under development and will soon be available for download on Google Play.
 
 <a href="">
