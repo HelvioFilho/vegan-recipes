@@ -17,12 +17,20 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="index"
+        name="(home)"
         options={{
-          title: 'Tab One',
           tabBarActiveTintColor: colors.green[900],
           tabBarIcon: ({ color, size }) => (
             <Entypo className="-mb-2" name="bowl" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          tabBarActiveTintColor: colors.green[900],
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons className="-mb-2" name="search" size={size} color={color} />
           ),
         }}
       />
