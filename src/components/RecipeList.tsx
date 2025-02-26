@@ -2,20 +2,17 @@ import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { RelativePathString, router } from 'expo-router';
 
-export type RecipeProps = {
-  id: string;
-  name: string;
-  total_ingredients: string;
-  time: number;
-  cover: string;
-  video: string;
-};
+import { RecipeProps } from '@/hooks/useInfiniteRecipes';
 
 type RecipeListProps = {
   data: RecipeProps;
 };
 
+const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
+
 export function RecipeList({ data }: RecipeListProps) {
+  const cover = `${IMAGE_URL}${data.cover}`;
+
   const handleRecipe = () => {
     const receive = JSON.stringify(data);
 
@@ -32,7 +29,7 @@ export function RecipeList({ data }: RecipeListProps) {
       accessibilityRole="button"
       activeOpacity={0.8}
       onPress={handleRecipe}>
-      <Image source={{ uri: data.cover }} className="h-60 w-full rounded-2xl" resizeMode="cover" />
+      <Image source={{ uri: cover }} className="h-60 w-full rounded-2xl" resizeMode="cover" />
       <View className="absolute bottom-0 left-0 z-50 px-7 py-3">
         <Text className="font-bold text-xl text-white-100">{data.name}</Text>
         <View className="flex-row items-center justify-start">
