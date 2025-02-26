@@ -1,7 +1,8 @@
 import React from 'react';
 import { render, fireEvent } from '@testing-library/react-native';
-import { RecipeList, RecipeProps } from '@/components/RecipeList';
+import { RecipeList } from '@/components/RecipeList';
 import { router } from 'expo-router';
+import { RecipeProps } from '@/hooks/useInfiniteRecipes';
 
 jest.mock('expo-router', () => ({
   router: {
@@ -20,9 +21,12 @@ describe('RecipeList component', () => {
     id: '123',
     name: 'Mock Recipe',
     total_ingredients: '5',
-    time: 10,
+    time: '10',
     cover: 'https://example.com/image.jpg',
     video: 'https://example.com/video.mp4',
+    rating: '5',
+    difficulty: 'Fácil',
+    calories: '100 kcal',
   };
 
   it('renders the recipe data correctly', () => {
