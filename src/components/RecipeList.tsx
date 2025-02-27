@@ -1,6 +1,6 @@
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { RelativePathString, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import { RecipeProps } from '@/hooks/useInfiniteRecipes';
 
@@ -14,12 +14,7 @@ export function RecipeList({ data }: RecipeListProps) {
   const cover = `${IMAGE_URL}${data.cover}`;
 
   const handleRecipe = () => {
-    const receive = JSON.stringify(data);
-
-    router.push({
-      pathname: `/recipe/` as RelativePathString,
-      params: { data: receive },
-    });
+    router.push(`/recipe?id=${data.id}`);
   };
 
   return (
