@@ -23,7 +23,7 @@ describe('RecipeList component', () => {
     total_ingredients: '5',
     time: '10',
     cover: 'https://example.com/image.jpg',
-    video: 'https://example.com/video.mp4',
+    video: 'https://youtube.com/watch?v=123',
     rating: '5',
     difficulty: 'Fácil',
     calories: '100 kcal',
@@ -37,16 +37,11 @@ describe('RecipeList component', () => {
     expect(getByText('10 minutos')).toBeTruthy();
   });
 
-  it('navigates to the correct route with the correct data when pressed', () => {
+  it('navigates to the correct route when pressed', () => {
     const { getByRole } = render(<RecipeList data={mockRecipe} />);
     const button = getByRole('button');
     fireEvent.press(button);
     expect(router.push).toHaveBeenCalledTimes(1);
-
-    const stringifiedData = JSON.stringify(mockRecipe);
-    expect(router.push).toHaveBeenCalledWith({
-      pathname: '/recipe/',
-      params: { data: stringifiedData },
-    });
+    expect(router.push).toHaveBeenCalledWith(`/recipe?id=${mockRecipe.id}`);
   });
 });
