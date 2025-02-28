@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, SafeAreaView, Text, ActivityIndicator, View, Image } from 'react-native';
 
+import { Button } from '@/components/Button';
 import { Filters } from '@/components/Filters';
 import { ErrorCard } from '@/components/ErrorCard';
 import { RecipeList } from '@/components/RecipeList';
@@ -29,15 +30,12 @@ export default function search() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterByDifficulty, setFilterByDifficulty] = useState<filterByDifficulty>({});
   const [filterByFoodType, setFilterByFoodType] = useState<filterByFoodType>({});
+  const [isAnyFilterActive, setIsAnyFilterActive] = useState(false);
+  const [consult, setConsult] = useState('');
 
   const router = useRouter();
 
   const { data: foodTypesData } = useFoodTypes();
-
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-    router.replace(`/search?search=${encodeURIComponent(value)}`);
-  };
 
   const handleApplyFilters = (
     newDifficultyFilter: filterByDifficulty,
@@ -51,20 +49,44 @@ export default function search() {
           return item;
         })
         .filter((item) => item !== undefined);
-      setFilterByFoodType(newFoodTypeFilter);
-    } else {
-      setFilterByFoodType(newFoodTypeFilter);
     }
+    setFilterByFoodType(newFoodTypeFilter);
+    const finalQuery = buildConsultQuery(searchQuery, newDifficultyFilter, newFoodTypeFilter);
+    setConsult(encodeURI(finalQuery));
   };
 
-  const consult =
-    searchQuery +
-    (filterByDifficulty.difficulty ? `&difficulty=${filterByDifficulty.difficulty}` : '') +
-    (filterByFoodType.foodType ? `&food_types=${filterByFoodType.foodType}` : '');
-
-  const isAnyFilterActive = Boolean(
-    searchQuery || filterByDifficulty.difficulty || filterByFoodType.foodType
+  const buildConsultQuery = useCallback(
+    (
+      searchQuery: string,
+      filterByDifficulty: filterByDifficulty,
+      filterByFoodType: filterByFoodType
+    ): string => {
+      let finalQuery = searchQuery.trim();
+      if (filterByDifficulty.difficulty) {
+        finalQuery += `&difficulty=${filterByDifficulty.difficulty}`;
+      }
+      if (filterByFoodType.foodType) {
+        finalQuery += `&food_types=${filterByFoodType.foodType}`;
+      }
+      setIsAnyFilterActive(true);
+      return finalQuery;
+    },
+    []
   );
+
+  const handleSearch = () => {
+    const finalQuery = buildConsultQuery(searchQuery, filterByDifficulty, filterByFoodType);
+    setConsult(encodeURI(finalQuery));
+  };
+
+  const handleClear = () => {
+    setSearchQuery('');
+    setFilterByDifficulty({});
+    setFilterByFoodType({});
+    setConsult('');
+    setIsAnyFilterActive(false);
+    router.replace('/search');
+  };
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     useInfiniteSearchRecipes(consult);
@@ -80,8 +102,14 @@ export default function search() {
   };
 
   useEffect(() => {
-    if (searchParam && searchParam !== searchQuery) {
-      setSearchQuery(searchParam as string);
+    if (searchParam) {
+      setSearchQuery(decodeURIComponent(searchParam as string));
+      const finalQuery = buildConsultQuery(
+        decodeURIComponent(searchParam as string),
+        filterByDifficulty,
+        filterByFoodType
+      );
+      setConsult(encodeURI(finalQuery));
     }
   }, [searchParam]);
 
@@ -93,16 +121,23 @@ export default function search() {
         foodType={filterByFoodType.foodType}
         foodTypesData={foodTypesData}
       />
-      <SearchInput
-        handleSearch={handleSearch}
-        value={(searchParam ? searchParam : searchQuery) as string}
-      />
-      <SearchMessage
-        searchQuery={searchQuery}
-        filterByDifficulty={filterByDifficulty}
-        filterByFoodType={filterByFoodType}
-        foodTypesData={foodTypesData}
-      />
+      <SearchInput handleSearch={handleSearch} value={searchQuery} setInputValue={setSearchQuery} />
+      {isAnyFilterActive && (
+        <>
+          <Button
+            title="Limpar filtros"
+            className="text-white mb-2 mt-1 w-1/3 self-center rounded-full bg-red-500 p-1"
+            buttonStyle="text-white-100 text-sm font-bold text-center"
+            onPress={handleClear}
+          />
+          <SearchMessage
+            searchQuery={searchQuery}
+            filterByDifficulty={filterByDifficulty}
+            filterByFoodType={filterByFoodType}
+            foodTypesData={foodTypesData}
+          />
+        </>
+      )}
       {isLoading ? (
         isLoadingComponent()
       ) : error ? (
