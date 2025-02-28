@@ -42,6 +42,18 @@ jest.mock('@/components/Filters', () => {
   };
 });
 
+jest.mock('@/components/Button', () => {
+  const React = require('react');
+  const { TouchableOpacity, Text } = require('react-native');
+  return {
+    Button: ({ title, onPress }: any) => (
+      <TouchableOpacity testID="clear-filters-button" onPress={onPress}>
+        <Text>{title}</Text>
+      </TouchableOpacity>
+    ),
+  };
+});
+
 jest.mock('expo-font', () => {
   const actualExpoFont = jest.requireActual('expo-font');
   return {
@@ -91,7 +103,7 @@ describe('Search screen', () => {
     jest.clearAllMocks();
   });
 
-  it('should render loading indicator if isLoading is true', () => {
+  it('renders loading indicator when isLoading is true', () => {
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: null,
       isLoading: true,
@@ -104,7 +116,7 @@ describe('Search screen', () => {
     expect(screen.getByTestId('loading-view')).toBeTruthy();
   });
 
-  it('should render error card if error is not null', () => {
+  it('renders error card when error is present', () => {
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: null,
       isLoading: false,
@@ -117,7 +129,7 @@ describe('Search screen', () => {
     expect(screen.getByText(/Ocorreu um erro inesperado/i)).toBeTruthy();
   });
 
-  it('should render the list of recipes if data exists and no error', async () => {
+  it('renders the list of recipes when data exists and no error', async () => {
     const mockData = {
       pages: [
         {
@@ -143,7 +155,7 @@ describe('Search screen', () => {
     });
   });
 
-  it('should call fetchNextPage when onEndReached if there is next page', () => {
+  it('calls fetchNextPage when onEndReached and there is a next page', () => {
     const fetchNextPageMock = jest.fn();
     const mockData = {
       pages: [
@@ -168,7 +180,7 @@ describe('Search screen', () => {
     expect(fetchNextPageMock).toHaveBeenCalledTimes(1);
   });
 
-  it('should NOT call fetchNextPage when onEndReached if there is no next page', () => {
+  it('does not call fetchNextPage when onEndReached and there is no next page', () => {
     const fetchNextPageMock = jest.fn();
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: { pages: [] },
@@ -184,7 +196,7 @@ describe('Search screen', () => {
     expect(fetchNextPageMock).not.toHaveBeenCalled();
   });
 
-  it('should render ListEmptyComponent when no recipes and any filter is active', async () => {
+  it('renders ListEmptyComponent when no recipes and any filter is active', async () => {
     (useLocalSearchParams as jest.Mock).mockReturnValue({ search: 'test' });
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: { pages: [] },
@@ -204,7 +216,7 @@ describe('Search screen', () => {
     });
   });
 
-  it('should render footer loading component when isFetchingNextPage is true', () => {
+  it('renders footer loading component when isFetchingNextPage is true', () => {
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: { pages: [] },
       isLoading: false,
@@ -217,8 +229,7 @@ describe('Search screen', () => {
     expect(screen.getByTestId('activity-indicator')).toBeTruthy();
   });
 
-  it('should call router.replace with the search value when pressing the search button', () => {
-    const { __mockReplace } = require('expo-router');
+  it('updates search query and builds consult query when search button is pressed', () => {
     (useLocalSearchParams as jest.Mock).mockReturnValue({ search: '' });
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: { pages: [] },
@@ -231,12 +242,14 @@ describe('Search screen', () => {
     renderSearch();
     const input = screen.getByPlaceholderText('Buscar receita');
     fireEvent.changeText(input, 'new search');
-    const button = screen.getByTestId('search-button');
-    fireEvent.press(button);
-    expect(__mockReplace).toHaveBeenCalledWith('/search?search=new%20search');
+    const searchButton = screen.getByTestId('search-button');
+    fireEvent.press(searchButton);
+    const calls = (useInfiniteSearchRecipes as jest.Mock).mock.calls;
+    const lastConsultArg = calls[calls.length - 1][0];
+    expect(lastConsultArg).toContain('new%20search');
   });
 
-  it('should update SearchInput value with searchParam from URL', () => {
+  it('updates SearchInput value with searchParam from URL', () => {
     (useLocalSearchParams as jest.Mock).mockReturnValue({ search: 'updated' });
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: { pages: [] },
@@ -251,7 +264,7 @@ describe('Search screen', () => {
     expect(input.props.value).toBe('updated');
   });
 
-  it('should update filter states when Filters child calls applyFilters', async () => {
+  it('updates filter states when Filters child calls applyFilters (with foodType)', async () => {
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: { pages: [] },
       isLoading: false,
@@ -260,22 +273,18 @@ describe('Search screen', () => {
       hasNextPage: false,
       isFetchingNextPage: false,
     });
-
     renderSearch();
-
     const filterButton = screen.getByTestId('mock-apply-filter');
     fireEvent.press(filterButton);
-
     await waitFor(() => {
       const calls = (useInfiniteSearchRecipes as jest.Mock).mock.calls;
       const lastConsultArg = calls[calls.length - 1][0];
-
-      expect(lastConsultArg).toContain('&difficulty=Fácil');
+      expect(lastConsultArg).toContain('&difficulty=F%C3%A1cil');
       expect(lastConsultArg).toContain('&food_types=1,2,3');
     });
   });
 
-  it('should use else branch of handleApplyFilters when newFoodTypeFilter.foodType is falsy', async () => {
+  it('uses else branch of handleApplyFilters when foodType is falsy', async () => {
     (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
       data: { pages: [] },
       isLoading: false,
@@ -284,18 +293,37 @@ describe('Search screen', () => {
       hasNextPage: false,
       isFetchingNextPage: false,
     });
-
     renderSearch();
-
     const filterButton = screen.getByTestId('mock-apply-filter-without-foodType');
     fireEvent.press(filterButton);
-
     await waitFor(() => {
       const calls = (useInfiniteSearchRecipes as jest.Mock).mock.calls;
       const lastConsultArg = calls[calls.length - 1][0];
-
-      expect(lastConsultArg).toContain('&difficulty=Intermediário');
+      expect(lastConsultArg).toContain('&difficulty=Intermedi%C3%A1rio');
       expect(lastConsultArg).not.toContain('&food_types=');
     });
+  });
+
+  it('shows clear filters button and SearchMessage when filters are active, and clears filters when pressed', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ search: 'test' });
+    (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
+      data: { pages: [] },
+      isLoading: false,
+      error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
+    renderSearch();
+    const filterButton = screen.getByTestId('mock-apply-filter');
+    fireEvent.press(filterButton);
+    await waitFor(() => {
+      expect(screen.getByTestId('clear-filters-button')).toBeTruthy();
+      expect(screen.getByText(/Limpar filtros/i)).toBeTruthy();
+    });
+    const clearButton = screen.getByTestId('clear-filters-button');
+    const { __mockReplace } = require('expo-router');
+    fireEvent.press(clearButton);
+    expect(__mockReplace).toHaveBeenCalledWith('/search');
   });
 });
