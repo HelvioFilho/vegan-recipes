@@ -1,16 +1,10 @@
-import React, { useState } from 'react';
 import { View, Text, ScrollView } from 'react-native';
 import { FilterChip } from './FilterChip';
 
 import { FoodType } from '@/hooks/useFoodTypes';
 
-type filterByDifficulty = {
-  difficulty?: string;
-};
-
-type filterByFoodType = {
-  foodType?: number[];
-};
+type filterByDifficulty = { difficulty?: string };
+type filterByFoodType = { foodType?: number[] };
 
 type FiltersProps = {
   applyFilters: (
@@ -28,34 +22,27 @@ export function Filters({
   foodType = [],
   foodTypesData,
 }: FiltersProps) {
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>(difficulty);
-  const [selectedFoodTypes, setSelectedFoodTypes] = useState<number[]>(foodType);
-
   const difficulties = ['Fácil', 'Intermediário', 'Difícil'];
-  const dataFoodTypes = foodTypesData?.map((item) => {
-    return {
-      label: item.name,
-      value: item.id,
-    };
-  });
 
-  const handleSelectDifficulty = (value: string) => {
-    const newDifficulty = selectedDifficulty === value ? '' : value;
-    setSelectedDifficulty(newDifficulty);
-    applyFilters({ difficulty: newDifficulty }, { foodType: [...selectedFoodTypes] });
-  };
+  const dataFoodTypes = foodTypesData?.map((item) => ({
+    label: item.name,
+    value: item.id,
+  }));
 
-  const handleSelectFoodType = (value: number) => {
-    let selectedFood = [];
-    if (selectedFoodTypes.includes(value)) {
-      setSelectedFoodTypes(selectedFoodTypes.filter((item) => item !== value));
-      selectedFood = selectedFoodTypes.filter((item) => item !== value);
+  function handleSelectDifficulty(value: string) {
+    const newDifficulty = value === difficulty ? '' : value;
+    applyFilters({ difficulty: newDifficulty }, { foodType: [...foodType] });
+  }
+
+  function handleSelectFoodType(value: number) {
+    let newFoodTypes = [...foodType];
+    if (newFoodTypes.includes(value)) {
+      newFoodTypes = newFoodTypes.filter((item) => item !== value);
     } else {
-      setSelectedFoodTypes([...selectedFoodTypes, value]);
-      selectedFood = [...selectedFoodTypes, value];
+      newFoodTypes.push(value);
     }
-    applyFilters({ difficulty: selectedDifficulty }, { foodType: selectedFood });
-  };
+    applyFilters({ difficulty }, { foodType: newFoodTypes });
+  }
 
   return (
     <View className="px-5">
@@ -65,7 +52,7 @@ export function Filters({
           <FilterChip
             key={item}
             label={item}
-            selected={item === selectedDifficulty}
+            selected={item === difficulty}
             onPress={() => handleSelectDifficulty(item)}
           />
         ))}
@@ -74,9 +61,9 @@ export function Filters({
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {dataFoodTypes?.map((item) => (
           <FilterChip
-            key={item.label}
+            key={item.value}
             label={item.label}
-            selected={selectedFoodTypes.includes(item.value)}
+            selected={foodType.includes(item.value)}
             onPress={() => handleSelectFoodType(item.value)}
           />
         ))}
