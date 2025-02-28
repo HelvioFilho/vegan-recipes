@@ -1,21 +1,15 @@
-import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { TextInput, TouchableOpacity, View } from 'react-native';
 
 import { colors } from '@/styles/colors';
 
 type SearchInputProps = {
-  handleSearch: (value: string) => void;
-  value?: string;
+  handleSearch: () => void;
+  value: string;
+  setInputValue: (value: string) => void;
 };
 
-export function SearchInput({ handleSearch, value = '' }: SearchInputProps) {
-  const [inputValue, setInputValue] = useState(value);
-
-  const handleButtonPress = () => {
-    handleSearch(inputValue);
-  };
-
+export function SearchInput({ handleSearch, setInputValue, value }: SearchInputProps) {
   return (
     <>
       <View
@@ -24,7 +18,7 @@ export function SearchInput({ handleSearch, value = '' }: SearchInputProps) {
         <TextInput
           className="h-14 w-[88.3%] max-w-[88.3%]"
           placeholder="Buscar receita"
-          value={inputValue}
+          value={value}
           onChangeText={setInputValue}
         />
         <TouchableOpacity
@@ -33,7 +27,7 @@ export function SearchInput({ handleSearch, value = '' }: SearchInputProps) {
           accessibilityRole="button"
           className="rounded-lg bg-green-600 px-3 py-3"
           activeOpacity={0.8}
-          onPress={handleButtonPress}>
+          onPress={handleSearch}>
           <Ionicons name="search" size={28} color={colors.white[100]} />
         </TouchableOpacity>
       </View>
