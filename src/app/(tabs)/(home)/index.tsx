@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -12,6 +13,7 @@ import { useInfiniteRecipes } from '@/hooks/useInfiniteRecipes';
 import { colors } from '@/styles/colors';
 
 export default function Home() {
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     useInfiniteRecipes();
 
@@ -19,8 +21,8 @@ export default function Home() {
 
   const router = useRouter();
 
-  const handleSearch = (value: string) => {
-    router.push(`/search?search=${encodeURIComponent(value)}`);
+  const handleSearch = () => {
+    router.push(`/search?search=${encodeURIComponent(searchQuery)}`);
   };
 
   if (isLoading) {
@@ -42,7 +44,7 @@ export default function Home() {
         <Text className="font-bold text-2xl text-black-900">Encontre a receita</Text>
         <Text className="font-bold text-2xl text-black-900">que combina com você</Text>
       </View>
-      <SearchInput handleSearch={handleSearch} />
+      <SearchInput handleSearch={handleSearch} value={searchQuery} setInputValue={setSearchQuery} />
       <FlatList
         testID="recipe-flatlist"
         data={recipes}
