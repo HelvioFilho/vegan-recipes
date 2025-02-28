@@ -33,50 +33,67 @@ describe('Filters Component', () => {
     expect(getByText('Lanche')).toBeTruthy();
   });
 
-  it('calls applyFilters when a difficulty chip is pressed (toggle behavior)', () => {
-    const { getByText } = render(
-      <Filters applyFilters={mockApplyFilters} foodTypesData={foodTypesData} />
-    );
-
-    const difficultyChip = getByText('Fácil');
-
-    fireEvent.press(difficultyChip);
-    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: 'Fácil' }, { foodType: [] });
-
-    fireEvent.press(difficultyChip);
-    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [] });
-  });
-
-  it('calls applyFilters when a food type chip is pressed (toggle behavior)', () => {
-    const { getByText } = render(
-      <Filters applyFilters={mockApplyFilters} foodTypesData={foodTypesData} />
-    );
-
-    const dessertChip = getByText('Sobremesa');
-    const sweetChip = getByText('Doce');
-
-    fireEvent.press(dessertChip);
-    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [1] });
-
-    fireEvent.press(sweetChip);
-    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [1, 2] });
-
-    fireEvent.press(dessertChip);
-    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [2] });
-  });
-
-  it('initializes with provided props and toggles difficulty correctly', () => {
+  it('calls applyFilters with toggled difficulty when pressing a difficulty chip (ligar)', () => {
     const { getByText } = render(
       <Filters
         applyFilters={mockApplyFilters}
-        difficulty="Difícil"
-        foodType={[3]}
+        difficulty=""
+        foodType={[]}
         foodTypesData={foodTypesData}
       />
     );
 
-    const difficultyChip = getByText('Difícil');
-    fireEvent.press(difficultyChip);
-    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [3] });
+    const facilChip = getByText('Fácil');
+    fireEvent.press(facilChip);
+
+    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: 'Fácil' }, { foodType: [] });
+  });
+
+  it('calls applyFilters with toggled difficulty when pressing a difficulty chip (desligar)', () => {
+    const { getByText } = render(
+      <Filters
+        applyFilters={mockApplyFilters}
+        difficulty="Fácil"
+        foodType={[]}
+        foodTypesData={foodTypesData}
+      />
+    );
+
+    const facilChip = getByText('Fácil');
+    fireEvent.press(facilChip);
+
+    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [] });
+  });
+
+  it('calls applyFilters when a food type chip is pressed to add a type', () => {
+    const { getByText } = render(
+      <Filters
+        applyFilters={mockApplyFilters}
+        difficulty=""
+        foodType={[]}
+        foodTypesData={foodTypesData}
+      />
+    );
+
+    const sobremesaChip = getByText('Sobremesa');
+    fireEvent.press(sobremesaChip);
+
+    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [1] });
+  });
+
+  it('calls applyFilters when a food type chip is pressed to remove a type', () => {
+    const { getByText } = render(
+      <Filters
+        applyFilters={mockApplyFilters}
+        difficulty=""
+        foodType={[1, 2]}
+        foodTypesData={foodTypesData}
+      />
+    );
+
+    const sobremesaChip = getByText('Sobremesa');
+    fireEvent.press(sobremesaChip);
+
+    expect(mockApplyFilters).toHaveBeenLastCalledWith({ difficulty: '' }, { foodType: [2] });
   });
 });
