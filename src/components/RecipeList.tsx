@@ -4,6 +4,8 @@ import { router } from 'expo-router';
 
 import { RecipeProps } from '@/hooks/useInfiniteRecipes';
 
+import formatTime from '@/utils/formatTime';
+
 type RecipeListProps = {
   data: RecipeProps;
 };
@@ -34,7 +36,9 @@ export function RecipeList({ data }: RecipeListProps) {
           <View className="w-4 items-center justify-center">
             <Text className="font-regular text-lg text-white-100">|</Text>
           </View>
-          <Text className="font-regular text-lg text-white-100">{data.time} minutos</Text>
+          <Text className="font-regular text-lg text-white-100">
+            {formatTime(Number(data.time))}
+          </Text>
         </View>
       </View>
       <LinearGradient
