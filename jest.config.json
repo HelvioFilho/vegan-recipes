@@ -19,7 +19,6 @@
   ],
   "testPathIgnorePatterns": [
     "./src/__tests__/__mocks__",
-    "./src/__tests__/utils",
     "./src/__tests__/coverage",
     "./src/.*/_layout.tsx"
   ],
