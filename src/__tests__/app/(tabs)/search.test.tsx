@@ -1,10 +1,11 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useInfiniteSearchRecipes } from '@/hooks/useSearchRecipes';
-import { useFoodTypes } from '@/hooks/useFoodTypes';
 import { useLocalSearchParams } from 'expo-router';
 import Search from '@/app/(tabs)/search';
+
+import { useInfiniteSearchRecipes } from '@/hooks/useSearchRecipes';
+import { useFoodTypes } from '@/hooks/useFoodTypes';
 
 jest.mock('expo-router', () => {
   const mockReplace = jest.fn();
@@ -35,6 +36,11 @@ jest.mock('@/components/Filters', () => {
             testID="mock-apply-filter-without-foodType"
             onPress={() => applyFilters({ difficulty: 'Intermediário' }, {})}>
             <Text>Aplicar Filtros (sem foodType)</Text>
+          </Pressable>
+          <Pressable
+            testID="mock-apply-filter-empty"
+            onPress={() => applyFilters({ difficulty: '' }, { foodType: [] })}>
+            <Text>Aplicar Filtros (sem filtros)</Text>
           </Pressable>
         </View>
       );
@@ -325,5 +331,27 @@ describe('Search screen', () => {
     const { __mockReplace } = require('expo-router');
     fireEvent.press(clearButton);
     expect(__mockReplace).toHaveBeenCalledWith('/search');
+  });
+
+  it('should set isAnyFilterActive to false when difficulty, foodType, and searchQuery are all empty', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ search: '' });
+
+    (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
+      data: { pages: [] },
+      isLoading: false,
+      error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
+
+    renderSearch();
+
+    const emptyFilterButton = screen.getByTestId('mock-apply-filter-empty');
+    fireEvent.press(emptyFilterButton);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('clear-filters-button')).toBeNull();
+    });
   });
 });
