@@ -1,5 +1,5 @@
-import { FoodType } from '@/hooks/useFoodTypes';
 import { Text, View } from 'react-native';
+import { FoodType } from '@/services/foodTypesLocal';
 
 type SearchMessageProps = {
   searchQuery: string | string[];

@@ -1,7 +1,7 @@
 import { View, Text, ScrollView } from 'react-native';
 import { FilterChip } from './FilterChip';
 
-import { FoodType } from '@/hooks/useFoodTypes';
+import { FoodType } from '@/services/foodTypesLocal';
 
 type filterByDifficulty = { difficulty?: string };
 type filterByFoodType = { foodType?: number[] };
