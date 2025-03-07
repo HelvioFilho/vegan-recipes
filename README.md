@@ -7,6 +7,7 @@
   <a href="#technologies">Technologies</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#getting-started">Getting started</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#project">Project</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+  <a href="#test-coverage">Test Coverage</a>&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
   <a href="#application">Application</a>
 </p>
 
@@ -20,11 +21,11 @@
 
 ## Features
 
-- [ ] Browse a variety of recipes with detailed information
-- [ ] Step-by-step cooking instructions for every recipe
+- [x] Browse a variety of recipes with detailed information
+- [x] Step-by-step cooking instructions for every recipe
 - [ ] Favorite recipes to save them for later
-- [ ] Search for recipes by name, ingredients, or category
-- [ ] Rate and review recipes to share your feedback
+- [x] Search for recipes by name, difficulty, or category
+- [ ] Rate recipes and share your feedback
 - [ ] Access your favorited recipes offline
 
 ## Technologies
@@ -51,6 +52,9 @@ Follow the steps below
 # Install the dependencies
 $ npm install
 
+# Create the ios and android folders
+$ npx expo prebuild
+
 # Start the project
 # Android
 $ npx expo android
@@ -66,9 +70,15 @@ Discover the joy of plant-based cooking with Vegan Recipes, your ultimate guide 
 
 Download now and start cooking up a healthier, kinder world!
 
-## Application
+## Test Coverage
+
+Check out our test coverage:
 
 [![codecov](https://codecov.io/gh/HelvioFilho/vegan-recipes/graph/badge.svg?token=SS50QFXQZV)](https://codecov.io/gh/HelvioFilho/vegan-recipes)
+
+Here you can view detailed information on how much of our code is covered by automated tests. This helps us ensure the quality and reliability of the application as it grows.
+
+## Application
 
 The app is under development and will soon be available for download on Google Play.
 
