@@ -68,7 +68,17 @@ export default function search() {
       if (filterByFoodType.foodType) {
         finalQuery += `&food_types=${filterByFoodType.foodType}`;
       }
-      setIsAnyFilterActive(true);
+
+      if (
+        filterByDifficulty.difficulty?.length === 0 &&
+        filterByFoodType.foodType?.length === 0 &&
+        searchQuery.length === 0
+      ) {
+        setIsAnyFilterActive(false);
+      } else {
+        setIsAnyFilterActive(true);
+      }
+
       return finalQuery;
     },
     []
