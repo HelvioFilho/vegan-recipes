@@ -12,7 +12,8 @@
           "launchMode": "most-recent"
         }
       ],
-      "expo-font"
+      "expo-font",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,
