@@ -1,7 +1,8 @@
 import { renderHook, waitFor } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useFoodTypes, FoodType } from '@/hooks/useFoodTypes';
-import { api } from '@/services/api';
+
+import { useFoodTypes } from '@/hooks/useFoodTypes';
+import { FoodType, getLocalFoodTypes } from '@/services/foodTypesLocal';
 
 function createQueryClientProviderWrapper() {
   const queryClient = new QueryClient({
@@ -17,11 +18,11 @@ function createQueryClientProviderWrapper() {
   return { Wrapper, queryClient };
 }
 
-jest.mock('@/services/api');
+jest.mock('@/services/foodTypesLocal');
+const mockedGetLocalFoodTypes = getLocalFoodTypes as jest.MockedFunction<typeof getLocalFoodTypes>;
 
 describe('useFoodTypes Hook', () => {
   const { Wrapper, queryClient } = createQueryClientProviderWrapper();
-  const mockedApi = api as jest.Mocked<typeof api>;
 
   const mockFoodTypes: FoodType[] = [
     { id: 1, name: 'Sobremesa' },
@@ -35,7 +36,7 @@ describe('useFoodTypes Hook', () => {
   });
 
   it('should successfully fetch and return food types', async () => {
-    mockedApi.get.mockResolvedValueOnce({ data: mockFoodTypes });
+    mockedGetLocalFoodTypes.mockResolvedValueOnce(mockFoodTypes);
 
     const { result, unmount } = renderHook(() => useFoodTypes(), { wrapper: Wrapper });
 
@@ -44,12 +45,12 @@ describe('useFoodTypes Hook', () => {
     });
 
     expect(result.current.data).toEqual(mockFoodTypes);
-    expect(mockedApi.get).toHaveBeenCalledWith('/foodtypes');
+    expect(mockedGetLocalFoodTypes).toHaveBeenCalledTimes(1);
     unmount();
   });
 
   it('should return an error when the API call fails', async () => {
-    mockedApi.get.mockRejectedValueOnce(new Error('API Error'));
+    mockedGetLocalFoodTypes.mockRejectedValueOnce(new Error('API Error'));
 
     const { result, unmount } = renderHook(() => useFoodTypes(), { wrapper: Wrapper });
 
