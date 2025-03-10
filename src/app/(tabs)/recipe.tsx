@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Image, SafeAreaView, ScrollView, Text, View } from 'react-native';
@@ -16,6 +16,7 @@ import formatTime from '@/utils/formatTime';
 import Kitchen from '@/assets/kitchen.svg';
 import Pan from '@/assets/pan.svg';
 import List from '@/assets/list.svg';
+import { favoriteRecipe, getFavoriteRecipeById, unfavoriteRecipe } from '@/services/favoritesLocal';
 
 const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
@@ -31,9 +32,31 @@ export default function Recipe() {
   const cover = `${IMAGE_URL}${food?.cover}`;
   let globalInstructionIndex = 0;
 
-  const handleFavorite = () => {
-    setFavorite(!favorite);
+  const checkFavorite = async () => {
+    if (id) {
+      const fav = await getFavoriteRecipeById(id);
+      setFavorite(!!fav);
+    }
   };
+
+  const handleFavorite = async () => {
+    try {
+      if (!food) return;
+      if (favorite) {
+        await unfavoriteRecipe(food.id);
+        setFavorite(false);
+      } else {
+        await favoriteRecipe(food);
+        setFavorite(true);
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
+
+  useEffect(() => {
+    checkFavorite();
+  }, [id]);
 
   if (isLoading) {
     return (

@@ -17,7 +17,7 @@ export default function TabLayout() {
         },
       }}>
       <Tabs.Screen
-        name="(home)"
+        name="index"
         options={{
           tabBarActiveTintColor: colors.green[900],
           tabBarIcon: ({ color, size }) => (
@@ -25,6 +25,7 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen name="recipe" options={{ href: null }} />
       <Tabs.Screen
         name="search"
         options={{
