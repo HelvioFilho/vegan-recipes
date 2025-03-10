@@ -1,6 +1,6 @@
 import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router } from 'expo-router';
+import { RelativePathString, router } from 'expo-router';
 
 import { RecipeProps } from '@/hooks/useInfiniteRecipes';
 
@@ -8,15 +8,19 @@ import formatTime from '@/utils/formatTime';
 
 type RecipeListProps = {
   data: RecipeProps;
+  previousRoute?: string;
 };
 
 const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
-export function RecipeList({ data }: RecipeListProps) {
+export function RecipeList({ data, previousRoute = '' }: RecipeListProps) {
   const cover = `${IMAGE_URL}${data.cover}`;
 
   const handleRecipe = () => {
-    router.push(`/recipe?id=${data.id}`);
+    const url = previousRoute
+      ? `/recipe?id=${data.id}&previousRoute=${previousRoute}`
+      : `/recipe?id=${data.id}`;
+    router.push(url as RelativePathString);
   };
 
   return (

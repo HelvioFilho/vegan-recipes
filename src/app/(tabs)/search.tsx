@@ -157,7 +157,7 @@ export default function search() {
           testID="recipe-flatlist"
           data={recipes}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <RecipeList data={item} />}
+          renderItem={({ item }) => <RecipeList data={item} previousRoute="search" />}
           showsVerticalScrollIndicator={false}
           onEndReached={() => {
             if (hasNextPage) {

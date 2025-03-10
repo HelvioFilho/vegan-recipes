@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { RelativePathString, router, useLocalSearchParams } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 
@@ -11,8 +11,14 @@ type HeaderProps = {
 };
 
 export function Header({ title, favorite, handleFavorite }: HeaderProps) {
+  const { previousRoute } = useLocalSearchParams<{ previousRoute?: string }>();
+
   const handleBackPage = () => {
-    router.back();
+    if (previousRoute) {
+      router.replace(`/${previousRoute}` as RelativePathString);
+    } else {
+      router.back();
+    }
   };
 
   return (
