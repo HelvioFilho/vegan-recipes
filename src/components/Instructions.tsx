@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -11,15 +10,17 @@ import Hat from '@/assets/hat.svg';
 type InstructionsProps = {
   data: Instruction;
   index: number;
+  checked: boolean;
+  onToggle: () => void;
 };
 
-export function Instructions({ data, index }: InstructionsProps) {
-  const [checked, setChecked] = useState(false);
+export function Instructions({ data, index, checked, onToggle }: InstructionsProps) {
   const isExtra = data.step === 'Dicas extras';
+
   return (
     <Pressable
       testID="instruction-button"
-      onPress={() => setChecked(!checked)}
+      onPress={onToggle}
       disabled={isExtra}
       role="button"
       accessibilityRole="button"

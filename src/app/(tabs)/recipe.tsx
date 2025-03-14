@@ -28,6 +28,7 @@ export default function Recipe() {
   const { id } = useLocalSearchParams<SearchParams>();
   const { data: food, isLoading, error } = useRecipeById(id);
   const [favorite, setFavorite] = useState(false);
+  const [highestCheckedStep, setHighestCheckedStep] = useState(0);
 
   const cover = `${IMAGE_URL}${food?.cover}`;
   let globalInstructionIndex = 0;
@@ -51,6 +52,14 @@ export default function Recipe() {
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
+    }
+  };
+
+  const handleToggleInstruction = (index: number) => {
+    if (index > highestCheckedStep) {
+      setHighestCheckedStep(index);
+    } else {
+      setHighestCheckedStep(index - 1);
     }
   };
 
@@ -174,11 +183,14 @@ export default function Recipe() {
               </View>
               {instructionsArray.map((instructions) => {
                 globalInstructionIndex += 1;
+                const index = globalInstructionIndex;
                 return (
                   <Instructions
                     key={instructions.id}
                     data={instructions}
-                    index={globalInstructionIndex}
+                    index={index}
+                    checked={index <= highestCheckedStep}
+                    onToggle={() => handleToggleInstruction(index)}
                   />
                 );
               })}
