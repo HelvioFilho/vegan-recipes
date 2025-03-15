@@ -21,12 +21,12 @@
 
 ## Features
 
-- [x] Browse a variety of recipes with detailed information
-- [x] Step-by-step cooking instructions for every recipe
-- [ ] Favorite recipes to save them for later
-- [x] Search for recipes by name, difficulty, or category
-- [ ] Rate recipes and share your feedback
-- [ ] Access your favorited recipes offline
+- [x] Browse a wide range of recipes with detailed information
+- [x] Follow step-by-step instructions for each recipe
+- [x] Mark recipes as favorites to save them for later
+- [x] Search recipes by name, difficulty, or category
+- [ ] Rate and provide feedback on recipes
+- [ ] Access your saved favorites offline
 
 ## Technologies
 
@@ -82,6 +82,6 @@ Here you can view detailed information on how much of our code is covered by aut
 
 The app is under development and will soon be available for download on Google Play.
 
-<a href="">
+<a href="https://play.google.com/store/apps/details?id=com.hsvf.veganrecipes">
   <img alt="application link in google play" title="google play" src=".github/googlePlay.svg" />
 </a>
