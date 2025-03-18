@@ -1,12 +1,13 @@
-import React from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
 import { render, fireEvent } from '@testing-library/react-native';
-import { router } from 'expo-router';
 import { Header } from '@/components/Header';
 
 jest.mock('expo-router', () => ({
   router: {
+    replace: jest.fn(),
     back: jest.fn(),
   },
+  useLocalSearchParams: jest.fn(),
 }));
 
 jest.mock('@expo/vector-icons', () => {
@@ -30,6 +31,12 @@ jest.mock('@expo/vector-icons', () => {
 });
 
 describe('Header Component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    (useLocalSearchParams as jest.Mock).mockReturnValue({});
+  });
+
   it('renders the title correctly', () => {
     const { getByText } = render(
       <Header title="Test Title" favorite={false} handleFavorite={jest.fn()} />
@@ -38,7 +45,7 @@ describe('Header Component', () => {
     expect(getByText('Test Title')).toBeTruthy();
   });
 
-  it('calls router.back() when the back button is pressed', () => {
+  it('calls router.back() when the back button is pressed and no previousRoute', () => {
     const { getByLabelText } = render(
       <Header title="Sample" favorite={false} handleFavorite={jest.fn()} />
     );
@@ -47,6 +54,22 @@ describe('Header Component', () => {
     fireEvent.press(backButton);
 
     expect(router.back).toHaveBeenCalledTimes(1);
+    expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it('calls router.replace() when the back button is pressed and previousRoute is present', () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ previousRoute: 'someRoute' });
+
+    const { getByLabelText } = render(
+      <Header title="Sample" favorite={false} handleFavorite={jest.fn()} />
+    );
+
+    const backButton = getByLabelText('Voltar');
+    fireEvent.press(backButton);
+
+    expect(router.replace).toHaveBeenCalledTimes(1);
+    expect(router.replace).toHaveBeenCalledWith('/someRoute');
+    expect(router.back).not.toHaveBeenCalled();
   });
 
   it('displays a heart icon (filled) when favorite is true', () => {
