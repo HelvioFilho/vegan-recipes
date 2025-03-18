@@ -1,7 +1,6 @@
-import React from 'react';
+import { router } from 'expo-router';
 import { render, fireEvent } from '@testing-library/react-native';
 import { RecipeList } from '@/components/RecipeList';
-import { router } from 'expo-router';
 import { RecipeProps } from '@/hooks/useInfiniteRecipes';
 
 jest.mock('expo-router', () => ({
@@ -17,6 +16,10 @@ jest.mock('expo-linear-gradient', () => ({
 }));
 
 describe('RecipeList component', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   const mockRecipe: RecipeProps = {
     id: '123',
     name: 'Mock Recipe',
@@ -29,7 +32,7 @@ describe('RecipeList component', () => {
     calories: '100 kcal',
   };
 
-  it('renders the recipe data correctly', () => {
+  it('should render the recipe data correctly', () => {
     const { getByText } = render(<RecipeList data={mockRecipe} />);
 
     expect(getByText('Mock Recipe')).toBeTruthy();
@@ -37,11 +40,20 @@ describe('RecipeList component', () => {
     expect(getByText('10 minutos')).toBeTruthy();
   });
 
-  it('navigates to the correct route when pressed', () => {
+  it('should navigate to the correct route when pressed', () => {
     const { getByRole } = render(<RecipeList data={mockRecipe} />);
     const button = getByRole('button');
     fireEvent.press(button);
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenCalledWith(`/recipe?id=${mockRecipe.id}`);
+  });
+
+  it('should navigate with previousRoute when it is provided', () => {
+    const { getByRole } = render(<RecipeList data={mockRecipe} previousRoute="some-route" />);
+    const button = getByRole('button');
+    fireEvent.press(button);
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith('/recipe?id=123&previousRoute=some-route');
   });
 });
