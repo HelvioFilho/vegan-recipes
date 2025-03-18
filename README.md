@@ -25,8 +25,8 @@
 - [x] Follow step-by-step instructions for each recipe
 - [x] Mark recipes as favorites to save them for later
 - [x] Search recipes by name, difficulty, or category
+- [x] Access your saved favorites offline
 - [ ] Rate and provide feedback on recipes
-- [ ] Access your saved favorites offline
 
 ## Technologies
 
@@ -80,7 +80,7 @@ Here you can view detailed information on how much of our code is covered by aut
 
 ## Application
 
-The app is under development and will soon be available for download on Google Play.
+The application is in beta testing and will soon be available for all users to download on Google Play.
 
 <a href="https://play.google.com/store/apps/details?id=com.hsvf.veganrecipes">
   <img alt="application link in google play" title="google play" src=".github/googlePlay.svg" />
