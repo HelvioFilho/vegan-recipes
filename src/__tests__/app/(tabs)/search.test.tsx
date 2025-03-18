@@ -1,11 +1,15 @@
-import React from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useLocalSearchParams } from 'expo-router';
 import Search from '@/app/(tabs)/search';
 
-import { useInfiniteSearchRecipes } from '@/hooks/useSearchRecipes';
+import { useOfflineStore } from '@/store/offlineStore';
 import { useFoodTypes } from '@/hooks/useFoodTypes';
+import { useInfiniteSearchRecipes } from '@/hooks/useSearchRecipes';
+
+jest.mock('@/store/offlineStore', () => ({
+  useOfflineStore: jest.fn(),
+}));
 
 jest.mock('expo-router', () => {
   const mockReplace = jest.fn();
@@ -60,6 +64,22 @@ jest.mock('@/components/Button', () => {
   };
 });
 
+jest.mock('@/components/ErrorCard', () => {
+  const { View, Text, TouchableOpacity } = require('react-native');
+  return {
+    ErrorCard: ({ handleRefresh }: { handleRefresh?: () => void }) => (
+      <View>
+        <Text>An unexpected error occurred</Text>
+        {handleRefresh && (
+          <TouchableOpacity onPress={handleRefresh} testID="errorcard-refresh-button">
+            <Text>Try Again</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    ),
+  };
+});
+
 jest.mock('expo-font', () => {
   const actualExpoFont = jest.requireActual('expo-font');
   return {
@@ -103,6 +123,7 @@ describe('Search screen', () => {
   beforeEach(() => {
     (useLocalSearchParams as jest.Mock).mockReturnValue({ search: '' });
     (useFoodTypes as jest.Mock).mockReturnValue({ data: [] });
+    (useOfflineStore as unknown as jest.Mock).mockReturnValue({ isOffline: false });
   });
 
   afterEach(() => {
@@ -132,7 +153,7 @@ describe('Search screen', () => {
       isFetchingNextPage: false,
     });
     renderSearch();
-    expect(screen.getByText(/Ocorreu um erro inesperado/i)).toBeTruthy();
+    expect(screen.getByText(/An unexpected error occurred/i)).toBeTruthy();
   });
 
   it('renders the list of recipes when data exists and no error', async () => {
@@ -252,6 +273,7 @@ describe('Search screen', () => {
     fireEvent.press(searchButton);
     const calls = (useInfiniteSearchRecipes as jest.Mock).mock.calls;
     const lastConsultArg = calls[calls.length - 1][0];
+
     expect(lastConsultArg).toContain('new%20search');
   });
 
@@ -267,6 +289,7 @@ describe('Search screen', () => {
     });
     renderSearch();
     const input = screen.getByPlaceholderText('Buscar receita');
+
     expect(input.props.value).toBe('updated');
   });
 
@@ -285,6 +308,7 @@ describe('Search screen', () => {
     await waitFor(() => {
       const calls = (useInfiniteSearchRecipes as jest.Mock).mock.calls;
       const lastConsultArg = calls[calls.length - 1][0];
+
       expect(lastConsultArg).toContain('&difficulty=F%C3%A1cil');
       expect(lastConsultArg).toContain('&food_types=1,2,3');
     });
@@ -330,6 +354,7 @@ describe('Search screen', () => {
     const clearButton = screen.getByTestId('clear-filters-button');
     const { __mockReplace } = require('expo-router');
     fireEvent.press(clearButton);
+
     expect(__mockReplace).toHaveBeenCalledWith('/search');
   });
 
@@ -353,5 +378,47 @@ describe('Search screen', () => {
     await waitFor(() => {
       expect(screen.queryByTestId('clear-filters-button')).toBeNull();
     });
+  });
+
+  it('should redirect to the favorite screen if isOffline is true', () => {
+    const { __mockReplace } = require('expo-router');
+
+    (useOfflineStore as unknown as jest.Mock).mockReturnValue({ isOffline: true });
+
+    (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
+      data: { pages: [] },
+      isLoading: false,
+      error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      refetch: jest.fn(),
+    });
+
+    renderSearch();
+
+    expect(__mockReplace).toHaveBeenCalledWith('/(tabs)/favorite');
+  });
+
+  it('should call refetch when pressing "Try Again" in error card (handleRefresh)', async () => {
+    const mockRefetch = jest.fn();
+
+    (useOfflineStore as unknown as jest.Mock).mockReturnValue({ isOffline: false });
+    (useInfiniteSearchRecipes as jest.Mock).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error('Simulated error'),
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      refetch: mockRefetch,
+    });
+
+    renderSearch();
+
+    const refreshButton = screen.getByTestId('errorcard-refresh-button');
+    fireEvent.press(refreshButton);
+
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
   });
 });
