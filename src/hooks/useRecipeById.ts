@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/services/api';
+import { getFavoriteRecipeById } from '@/services/favoritesLocal';
 
 export type Ingredient = {
   id: string;
@@ -37,18 +38,30 @@ export type RecipeProps = {
   food_types: FoodType[];
 };
 
-export async function fetchRecipeById(id?: string): Promise<RecipeProps> {
+export async function fetchRecipeById(id?: string, isOffline?: boolean): Promise<RecipeProps> {
+  const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
+
   if (!id) {
     throw new Error('ID da receita não foi fornecido');
   }
+
+  const localRecipe = await getFavoriteRecipeById(id);
+
+  if (isOffline || localRecipe) {
+    if (localRecipe) {
+      return localRecipe;
+    }
+  }
+
   const response = await api.get<RecipeProps>(`/recipes/${id}`);
-  return response.data;
+
+  return { ...response.data, cover: `${IMAGE_URL}/${response.data.cover}` };
 }
 
-export function useRecipeById(id?: string) {
+export function useRecipeById(id?: string, isOffline?: boolean) {
   return useQuery<RecipeProps>({
     queryKey: ['recipeById', id],
-    queryFn: () => fetchRecipeById(id),
+    queryFn: () => fetchRecipeById(id, isOffline),
     enabled: !!id,
   });
 }
