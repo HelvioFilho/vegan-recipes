@@ -1,15 +1,17 @@
-import React from 'react';
-import Home from '@/app/(tabs)/(home)';
+import Home from '@/app/(tabs)/index';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useInfiniteRecipes } from '@/hooks/useInfiniteRecipes';
+import { useOfflineStore } from '@/store/offlineStore';
 
 jest.mock('expo-router', () => {
   const mockPush = jest.fn();
+  const mockReplace = jest.fn();
   return {
-    useRouter: () => ({ push: mockPush }),
+    useRouter: () => ({ push: mockPush, replace: mockReplace }),
     __mockPush: mockPush,
+    __mockReplace: mockReplace,
   };
 });
 
@@ -28,12 +30,32 @@ jest.mock('expo-linear-gradient', () => {
   return { LinearGradient: View };
 });
 
+jest.mock('@/store/offlineStore', () => ({
+  useOfflineStore: jest.fn(),
+}));
+
 jest.mock('@expo/vector-icons/Ionicons', () => 'Ionicons');
 jest.mock('@expo/vector-icons/Entypo', () => 'Entypo');
 
 jest.mock('@/hooks/useInfiniteRecipes', () => ({
   useInfiniteRecipes: jest.fn(),
 }));
+
+jest.mock('@/components/ErrorCard', () => {
+  const { View, Text, TouchableOpacity } = require('react-native');
+  return {
+    ErrorCard: ({ handleRefresh }: { handleRefresh?: () => void }) => (
+      <View>
+        <Text>An unexpected error occurred</Text>
+        {handleRefresh && (
+          <TouchableOpacity onPress={handleRefresh} testID="errorcard-refresh-button">
+            <Text>Try Again</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    ),
+  };
+});
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -54,8 +76,12 @@ function renderHome() {
 }
 
 describe('Home screen', () => {
-  afterEach(() => {
+  beforeEach(() => {
     jest.clearAllMocks();
+    (useOfflineStore as unknown as jest.Mock).mockReturnValue({
+      isOffline: false,
+      setIsOffline: jest.fn(),
+    });
   });
 
   it('should render loading indicator if isLoading is true', () => {
@@ -86,7 +112,7 @@ describe('Home screen', () => {
 
     renderHome();
 
-    const errorText = screen.getByText(/Ocorreu um erro inesperado/i);
+    const errorText = screen.getByText(/An unexpected error occurred/i);
     expect(errorText).toBeTruthy();
   });
 
@@ -203,5 +229,40 @@ describe('Home screen', () => {
 
     const loadingFooter = getByTestId('activity-indicator');
     expect(loadingFooter).toBeTruthy();
+  });
+
+  it('should redirect to the favorite screen if isOffline is true', () => {
+    const { __mockReplace } = require('expo-router');
+    (useOfflineStore as unknown as jest.Mock).mockReturnValue({ isOffline: true });
+
+    (useInfiniteRecipes as jest.Mock).mockReturnValue({
+      data: { pages: [] },
+      isLoading: false,
+      error: null,
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    });
+
+    renderHome();
+    expect(__mockReplace).toHaveBeenCalledWith('/(tabs)/favorite');
+  });
+
+  it('should call refetch when the refresh button in ErrorCard is pressed', () => {
+    const refetchMock = jest.fn();
+    (useInfiniteRecipes as jest.Mock).mockReturnValue({
+      data: null,
+      isLoading: false,
+      error: new Error('Simulated error'),
+      fetchNextPage: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      refetch: refetchMock,
+    });
+
+    renderHome();
+    const refreshButton = screen.getByTestId('errorcard-refresh-button');
+    fireEvent.press(refreshButton);
+    expect(refetchMock).toHaveBeenCalledTimes(1);
   });
 });
