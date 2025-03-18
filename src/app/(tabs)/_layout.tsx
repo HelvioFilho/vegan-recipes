@@ -2,7 +2,11 @@ import { Tabs } from 'expo-router';
 import { Entypo, Ionicons } from '@expo/vector-icons';
 import { colors } from '@/styles/colors';
 
+import { useOfflineStore } from '@/store/offlineStore';
+
 export default function TabLayout() {
+  const { isOffline } = useOfflineStore();
+
   return (
     <Tabs
       screenOptions={{
@@ -18,23 +22,35 @@ export default function TabLayout() {
       }}>
       <Tabs.Screen
         name="index"
-        options={{
-          tabBarActiveTintColor: colors.green[900],
-          tabBarIcon: ({ color, size }) => (
-            <Entypo className="-mb-2" name="bowl" size={size} color={color} />
-          ),
-        }}
+        options={
+          !isOffline
+            ? {
+                tabBarActiveTintColor: colors.green[900],
+                tabBarIcon: ({ color, size }) => (
+                  <Entypo className="-mb-2" name="bowl" size={size} color={color} />
+                ),
+              }
+            : {
+                href: null,
+              }
+        }
       />
-      <Tabs.Screen name="recipe" options={{ href: null }} />
       <Tabs.Screen
         name="search"
-        options={{
-          tabBarActiveTintColor: colors.green[900],
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons className="-mb-2" name="search" size={size} color={color} />
-          ),
-        }}
+        options={
+          !isOffline
+            ? {
+                tabBarActiveTintColor: colors.green[900],
+                tabBarIcon: ({ color, size }) => (
+                  <Ionicons className="-mb-2" name="search" size={size} color={color} />
+                ),
+              }
+            : {
+                href: null,
+              }
+        }
       />
+      <Tabs.Screen name="recipe" options={{ href: null }} />
       <Tabs.Screen
         name="favorite"
         options={{

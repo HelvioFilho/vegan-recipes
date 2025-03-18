@@ -3,6 +3,7 @@ import '@/styles/global.css';
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import NetInfo from '@react-native-community/netinfo';
 import {
   useFonts,
   Inter_400Regular,
@@ -12,6 +13,7 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { setupDatabase } from '@/services/setupDatabase';
 import { fetchFoodTypesIfNeeded } from '@/services/foodTypesLocal';
+import { useOfflineStore } from '@/store/offlineStore';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -24,10 +26,27 @@ const queryClient = new QueryClient();
 export default function RootLayout() {
   const [loaded, error] = useFonts({ Inter_400Regular, Inter_500Medium, Inter_700Bold });
 
+  const { isOffline, setIsOffline } = useOfflineStore();
+
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      const offline = !state.isConnected || state.isInternetReachable === false;
+      setIsOffline(offline);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [setIsOffline]);
+
   const startSetup = async () => {
     try {
       await setupDatabase();
-      await fetchFoodTypesIfNeeded();
+
+      if (!isOffline) {
+        await fetchFoodTypesIfNeeded();
+      }
+
       await SplashScreen.hideAsync();
     } catch (e) {
       console.log('Erro ao configurar banco e sincronizar dados', e);
@@ -39,7 +58,7 @@ export default function RootLayout() {
     if (loaded || error) {
       startSetup();
     }
-  }, [loaded, error]);
+  }, [loaded, error, isOffline]);
 
   if (!loaded && !error) {
     return null;
