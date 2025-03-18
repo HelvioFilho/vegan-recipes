@@ -16,6 +16,7 @@ import { useInfiniteSearchRecipes } from '@/hooks/useSearchRecipes';
 import { colors } from '@/styles/colors';
 
 import RecipeImage from '@/assets/recipes.png';
+import { useOfflineStore } from '@/store/offlineStore';
 
 type filterByDifficulty = {
   difficulty?: string;
@@ -26,14 +27,21 @@ type filterByFoodType = {
 };
 
 export default function search() {
+  const { isOffline } = useOfflineStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isOffline) {
+      router.replace('/(tabs)/favorite');
+    }
+  }, [isOffline]);
+
   const { search: searchParam } = useLocalSearchParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterByDifficulty, setFilterByDifficulty] = useState<filterByDifficulty>({});
   const [filterByFoodType, setFilterByFoodType] = useState<filterByFoodType>({});
   const [isAnyFilterActive, setIsAnyFilterActive] = useState(false);
   const [consult, setConsult] = useState('');
-
-  const router = useRouter();
 
   const { data: foodTypesData } = useFoodTypes();
 
@@ -98,7 +106,7 @@ export default function search() {
     router.replace('/search');
   };
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error, refetch } =
     useInfiniteSearchRecipes(consult);
 
   const recipes = data?.pages.flatMap((page) => page.recipes) || [];
@@ -109,6 +117,10 @@ export default function search() {
         <ActivityIndicator size="large" color={colors.green[600]} />
       </SafeAreaView>
     );
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   useEffect(() => {
@@ -151,7 +163,7 @@ export default function search() {
       {isLoading ? (
         isLoadingComponent()
       ) : error ? (
-        <ErrorCard />
+        <ErrorCard handleRefresh={handleRefresh} />
       ) : (
         <FlatList
           testID="recipe-flatlist"
