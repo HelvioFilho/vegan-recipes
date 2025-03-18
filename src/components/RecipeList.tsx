@@ -9,12 +9,13 @@ import formatTime from '@/utils/formatTime';
 type RecipeListProps = {
   data: RecipeProps;
   previousRoute?: string;
+  offline?: boolean;
 };
 
 const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
-export function RecipeList({ data, previousRoute = '' }: RecipeListProps) {
-  const cover = `${IMAGE_URL}${data.cover}`;
+export function RecipeList({ data, previousRoute = '', offline = false }: RecipeListProps) {
+  const cover = offline ? data.cover : `${IMAGE_URL}${data.cover}`;
 
   const handleRecipe = () => {
     const url = previousRoute
