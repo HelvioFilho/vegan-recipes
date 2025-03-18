@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ActivityIndicator, FlatList, SafeAreaView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
@@ -11,18 +11,30 @@ import { ListFooterLoading } from '@/components/ListFooterLoading';
 import { useInfiniteRecipes } from '@/hooks/useInfiniteRecipes';
 
 import { colors } from '@/styles/colors';
+import { useOfflineStore } from '@/store/offlineStore';
 
 export default function Home() {
+  const { isOffline } = useOfflineStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (isOffline) {
+      router.replace('/(tabs)/favorite');
+    }
+  }, [isOffline]);
+
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error, refetch } =
     useInfiniteRecipes();
 
   const recipes = data?.pages.flatMap((page) => page.recipes) || [];
 
-  const router = useRouter();
-
   const handleSearch = () => {
     router.push(`/search?search=${encodeURIComponent(searchQuery)}`);
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   if (isLoading) {
@@ -34,7 +46,7 @@ export default function Home() {
   }
 
   if (error) {
-    return <ErrorCard />;
+    return <ErrorCard handleRefresh={handleRefresh} />;
   }
 
   return (
