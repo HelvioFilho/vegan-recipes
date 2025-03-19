@@ -8,29 +8,28 @@ import { ErrorCard } from '@/components/ErrorCard';
 import { Ingredients } from '@/components/Ingredients';
 import { Instructions } from '@/components/Instructions';
 
+import formatTime from '@/utils/formatTime';
+import { useOfflineStore } from '@/store/offlineStore';
 import { Ingredient, Instruction, useRecipeById } from '@/hooks/useRecipeById';
+import { favoriteRecipe, getFavoriteRecipeById, unfavoriteRecipe } from '@/services/favoritesLocal';
 
 import { colors } from '@/styles/colors';
-import formatTime from '@/utils/formatTime';
 
 import Kitchen from '@/assets/kitchen.svg';
 import Pan from '@/assets/pan.svg';
 import List from '@/assets/list.svg';
-import { favoriteRecipe, getFavoriteRecipeById, unfavoriteRecipe } from '@/services/favoritesLocal';
-
-const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
 type SearchParams = {
   id: string;
 };
 
 export default function Recipe() {
+  const { isOffline } = useOfflineStore();
   const { id } = useLocalSearchParams<SearchParams>();
-  const { data: food, isLoading, error } = useRecipeById(id);
+  const { data: food, isLoading, error, refetch } = useRecipeById(id, isOffline);
   const [favorite, setFavorite] = useState(false);
   const [highestCheckedStep, setHighestCheckedStep] = useState(0);
 
-  const cover = `${IMAGE_URL}${food?.cover}`;
   let globalInstructionIndex = 0;
 
   const checkFavorite = async () => {
@@ -44,11 +43,11 @@ export default function Recipe() {
     try {
       if (!food) return;
       if (favorite) {
-        await unfavoriteRecipe(food.id);
         setFavorite(false);
+        await unfavoriteRecipe(food.id);
       } else {
-        await favoriteRecipe(food);
         setFavorite(true);
+        await favoriteRecipe(food);
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
@@ -61,6 +60,10 @@ export default function Recipe() {
     } else {
       setHighestCheckedStep(index - 1);
     }
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   useEffect(() => {
@@ -76,7 +79,7 @@ export default function Recipe() {
   }
 
   if (error) {
-    return <ErrorCard />;
+    return <ErrorCard handleRefresh={handleRefresh} />;
   }
 
   const ingredientsGroupedBySection =
@@ -108,7 +111,6 @@ export default function Recipe() {
       },
       {} as Record<string, Instruction[]>
     );
-
   return (
     <SafeAreaView className="flex-1">
       <Header title={food?.name as string} favorite={favorite} handleFavorite={handleFavorite} />
@@ -119,7 +121,7 @@ export default function Recipe() {
         <Image
           testID="recipe-cover"
           className="mt-3 h-64 w-full rounded-t-2xl"
-          source={{ uri: cover }}
+          source={{ uri: food?.cover }}
           resizeMode="cover"
           role="img"
           aria-label={food?.name}
