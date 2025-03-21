@@ -26,3 +26,4 @@ android
 coverage/
 
 .env
+eas.json

@@ -22,7 +22,7 @@ export function Ingredients({ data }: IngredientsProps) {
       <View className="mb-2 flex-1 flex-row items-center rounded-md bg-white-100 p-3">
         <View className="flex-1 px-2">
           <Text
-            className={`font-medium text-base ${checked ? 'text-gray-500 line-through' : ' text-black-900'}`}>
+            className={`mr-3 font-medium text-base ${checked ? 'text-gray-500 line-through' : ' text-black-900'}`}>
             {data?.name}
           </Text>
           {data?.amount && (

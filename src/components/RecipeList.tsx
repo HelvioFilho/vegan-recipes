@@ -31,9 +31,11 @@ export function RecipeList({ data, previousRoute = '', offline = false }: Recipe
       accessibilityRole="button"
       activeOpacity={0.8}
       onPress={handleRecipe}>
-      <Image source={{ uri: cover }} className="h-60 w-full rounded-2xl" resizeMode="cover" />
+      <Image source={{ uri: cover }} className="h-64 w-full rounded-2xl" resizeMode="cover" />
       <View className="absolute bottom-0 left-0 z-50 px-7 py-3">
-        <Text className="font-bold text-xl text-white-100">{data.name}</Text>
+        <Text className="font-bold text-xl text-white-100" numberOfLines={1} ellipsizeMode="tail">
+          {data.name}
+        </Text>
         <View className="flex-row items-center justify-start">
           <Text className="font-regular text-lg text-white-100">
             {data.total_ingredients} ingredientes

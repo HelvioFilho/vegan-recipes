@@ -120,7 +120,7 @@ export default function Recipe() {
         contentContainerStyle={{ flexGrow: 1 }}>
         <Image
           testID="recipe-cover"
-          className="mt-3 h-64 w-full rounded-t-2xl"
+          className="mt-3 h-72 w-full rounded-t-2xl"
           source={{ uri: food?.cover }}
           resizeMode="cover"
           role="img"
@@ -162,10 +162,10 @@ export default function Recipe() {
         </View>
         {ingredientsGroupedBySection &&
           Object.entries(ingredientsGroupedBySection).map(([sectionName, ingredientsArray]) => (
-            <View key={sectionName} className="mb-4">
-              <View className="h-12 flex-row  items-center gap-2 px-3 py-2">
+            <View key={sectionName} className="mb-3 flex-1">
+              <View className="mb-3  flex-row items-center gap-2 px-3 py-2">
                 <Ionicons name="newspaper-outline" size={24} color={colors.green[900]} />
-                <Text className="font-bold text-xl ">{sectionName}</Text>
+                <Text className="mr-4 flex-wrap pl-2 pr-4 font-bold text-xl">{sectionName}</Text>
               </View>
               {ingredientsArray.map((ingredient) => (
                 <Ingredients key={ingredient.id} data={ingredient} />
@@ -178,10 +178,12 @@ export default function Recipe() {
         </View>
         {instructionsGroupedByStep &&
           Object.entries(instructionsGroupedByStep).map(([step, instructionsArray]) => (
-            <View key={step} className="mx-3 mb-1">
-              <View className="mb-2 h-12 flex-row items-center justify-start gap-3 py-2">
-                <Pan width={28} height={28} fill={colors.green[900]} />
-                <Text className="mt-1 font-bold text-xl">{step}</Text>
+            <View key={step} className="mx-3 mb-1 flex-1">
+              <View className="mb-2 flex-row items-center justify-start gap-3 py-2">
+                <View className="pb-2">
+                  <Pan width={28} height={28} fill={colors.green[900]} />
+                </View>
+                <Text className="mr-4 flex-wrap pl-2 pr-4 font-bold text-xl">{step}</Text>
               </View>
               {instructionsArray.map((instructions) => {
                 globalInstructionIndex += 1;
