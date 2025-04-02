@@ -87,6 +87,12 @@ jest.mock('@/assets/kitchen.svg', () => 'KitchenSVG');
 jest.mock('@/assets/pan.svg', () => 'PanSVG');
 jest.mock('@/assets/list.svg', () => 'ListSVG');
 
+const mockedShowToast = jest.fn();
+jest.mock('@/contexts/Toast', () => ({
+  useToast: () => ({ showToast: mockedShowToast }),
+  ToastProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 const createTestQueryClient = () =>
   new QueryClient({
     defaultOptions: {
@@ -110,7 +116,7 @@ describe('Recipe screen', () => {
       isOffline: false,
       setIsOffline: jest.fn(),
     });
-
+    mockedShowToast.mockClear();
     jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -180,6 +186,8 @@ describe('Recipe screen', () => {
         cover: '/cover.jpg',
         total_ingredients: 3,
         time: 45,
+        difficulty: 'Fácil',
+        calories: 200,
         food_types: [
           { id: '1', name: 'Sweet' },
           { id: '2', name: 'Snack' },
@@ -210,6 +218,8 @@ describe('Recipe screen', () => {
 
     expect(screen.getByText('3 ingredientes')).toBeTruthy();
     expect(screen.getByText('Tempo de preparo: 45 minutos')).toBeTruthy();
+    expect(screen.getByText('Dificuldade da receita: Fácil')).toBeTruthy();
+    expect(screen.getByText('Calorias por porção: 200')).toBeTruthy();
     expect(screen.getByTestId('food-type-1')).toBeTruthy();
     expect(screen.getByTestId('food-type-2')).toBeTruthy();
     expect(screen.getByText('Testing observations')).toBeTruthy();
@@ -334,6 +344,47 @@ describe('Recipe screen', () => {
     await waitFor(() => {
       expect(screen.getByText('Not Favorite')).toBeTruthy();
     });
+  });
+
+  it('should toggle favorite state and call showToast accordingly', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'ABC' });
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: 'ABC',
+        name: 'Favorite Recipe',
+        cover: '/cover.jpg',
+        total_ingredients: 2,
+        time: null,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+    (favoriteRecipe as jest.Mock).mockResolvedValue(undefined);
+    (unfavoriteRecipe as jest.Mock).mockResolvedValue(undefined);
+
+    renderRecipe();
+
+    await waitFor(() => {
+      expect(screen.getByText('Not Favorite')).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByTestId('favorite-button'));
+    await waitFor(() => {
+      expect(screen.getByText('Favorite')).toBeTruthy();
+    });
+    expect(mockedShowToast).toHaveBeenCalledWith('Receita adicionada aos favoritos!', 'success');
+
+    fireEvent.press(screen.getByTestId('favorite-button'));
+    await waitFor(() => {
+      expect(screen.getByText('Not Favorite')).toBeTruthy();
+    });
+    expect(mockedShowToast).toHaveBeenCalledWith('Receita removida dos favoritos!', 'danger');
   });
 
   it('should do nothing if food is null when pressing favorite button', async () => {
