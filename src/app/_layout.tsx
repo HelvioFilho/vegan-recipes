@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { setupDatabase } from '@/services/setupDatabase';
 import { fetchFoodTypesIfNeeded } from '@/services/foodTypesLocal';
 import { useOfflineStore } from '@/store/offlineStore';
+import { ToastProvider } from '@/contexts/Toast';
 
 export const unstable_settings = {
   initialRouteName: '(tabs)',
@@ -66,12 +67,14 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <Stack.Screen name="(tabs)" />
-      </Stack>
+      <ToastProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}>
+          <Stack.Screen name="(tabs)" />
+        </Stack>
+      </ToastProvider>
     </QueryClientProvider>
   );
 }
