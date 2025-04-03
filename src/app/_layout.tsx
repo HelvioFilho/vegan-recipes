@@ -12,6 +12,7 @@ import {
 } from '@expo-google-fonts/inter';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { setupDatabase } from '@/services/setupDatabase';
+import { checkAndCreateLocalUser } from '@/services/checkUser';
 import { fetchFoodTypesIfNeeded } from '@/services/foodTypesLocal';
 import { useOfflineStore } from '@/store/offlineStore';
 import { ToastProvider } from '@/contexts/Toast';
@@ -46,6 +47,7 @@ export default function RootLayout() {
 
       if (!isOffline) {
         await fetchFoodTypesIfNeeded();
+        await checkAndCreateLocalUser();
       }
 
       await SplashScreen.hideAsync();

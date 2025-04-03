@@ -4,6 +4,12 @@ export async function setupDatabase() {
   const db = await getDb();
 
   await db.execAsync(`
+    -- Users
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL
+    );
+
     -- Recipes
     CREATE TABLE IF NOT EXISTS recipes (
       id INTEGER PRIMARY KEY NOT NULL,
