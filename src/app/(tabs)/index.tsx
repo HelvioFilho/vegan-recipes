@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
-import { ActivityIndicator, FlatList, SafeAreaView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  SafeAreaView,
+  Text,
+  View,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Logo } from '@/components/Logo';
@@ -24,6 +31,8 @@ export default function Home() {
   }, [isOffline]);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [refreshing, setRefreshing] = useState<boolean>(false);
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error, refetch } =
     useInfiniteRecipes();
 
@@ -33,8 +42,10 @@ export default function Home() {
     router.push(`/search?search=${encodeURIComponent(searchQuery)}`);
   };
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
   };
 
   if (isLoading) {
@@ -62,6 +73,7 @@ export default function Home() {
         data={recipes}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => <RecipeList data={item} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
         showsVerticalScrollIndicator={false}
         onEndReached={() => {
           if (hasNextPage) {
