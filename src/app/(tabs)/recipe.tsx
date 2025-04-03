@@ -8,6 +8,7 @@ import { ErrorCard } from '@/components/ErrorCard';
 import { Ingredients } from '@/components/Ingredients';
 import { Instructions } from '@/components/Instructions';
 
+import { useToast } from '@/contexts/Toast';
 import formatTime from '@/utils/formatTime';
 import { useOfflineStore } from '@/store/offlineStore';
 import { Ingredient, Instruction, useRecipeById } from '@/hooks/useRecipeById';
@@ -29,6 +30,7 @@ export default function Recipe() {
   const { data: food, isLoading, error, refetch } = useRecipeById(id, isOffline);
   const [favorite, setFavorite] = useState(false);
   const [highestCheckedStep, setHighestCheckedStep] = useState(0);
+  const { showToast } = useToast();
 
   let globalInstructionIndex = 0;
 
@@ -44,8 +46,10 @@ export default function Recipe() {
       if (!food) return;
       if (favorite) {
         setFavorite(false);
+        showToast('Receita removida dos favoritos!', 'danger');
         await unfavoriteRecipe(food.id);
       } else {
+        showToast('Receita adicionada aos favoritos!', 'success');
         setFavorite(true);
         await favoriteRecipe(food);
       }
@@ -129,12 +133,20 @@ export default function Recipe() {
         <View className="flex-row items-center justify-between px-4 py-3">
           <View className="flex-1">
             <Text className="mb-1 mt-2 font-bold text-lg text-black-900">{food?.name}</Text>
-            <Text className="font-regular text-base text-black-900">
-              {food?.total_ingredients} ingredientes
-            </Text>
-            <Text className="font-regular text-base text-black-900">
-              Tempo de preparo: {formatTime(food?.time ? Number(food.time) : 0)}
-            </Text>
+            <View className="gap-1">
+              <Text className="font-regular text-base text-black-900">
+                {food?.total_ingredients} ingredientes
+              </Text>
+              <Text className="font-regular text-base text-black-900">
+                Tempo de preparo: {formatTime(food?.time ? Number(food.time) : 0)}
+              </Text>
+              <Text className="font-regular text-base text-black-900">
+                Dificuldade da receita: {food?.difficulty}
+              </Text>
+              <Text className="font-regular text-base text-black-900">
+                Calorias por porção: {food?.calories ? food.calories : 'Não consta na receita'}
+              </Text>
+            </View>
             <View className="my-2 flex-row gap-2">
               {food?.food_types.map((foodType) => (
                 <View
