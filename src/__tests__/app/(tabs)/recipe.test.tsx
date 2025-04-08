@@ -26,6 +26,9 @@ jest.mock('@expo/vector-icons', () => {
   const { Text } = require('react-native');
   return {
     Ionicons: (props: React.ComponentProps<typeof Text>) => <Text {...props}>{props.name}</Text>,
+    MaterialCommunityIcons: (props: React.ComponentProps<typeof Text>) => (
+      <Text {...props}>{props.name}</Text>
+    ),
   };
 });
 
@@ -71,7 +74,7 @@ jest.mock('@/components/Ingredients', () => {
 });
 
 jest.mock('@/components/Instructions', () => {
-  const { View, Text, TouchableOpacity } = require('react-native');
+  const { Text, TouchableOpacity } = require('react-native');
   return {
     Instructions: ({ data, index, onToggle, checked }: any) => (
       <TouchableOpacity testID={`instruction-item-${index}`} onPress={onToggle}>
@@ -86,12 +89,41 @@ jest.mock('@/components/Instructions', () => {
 jest.mock('@/assets/kitchen.svg', () => 'KitchenSVG');
 jest.mock('@/assets/pan.svg', () => 'PanSVG');
 jest.mock('@/assets/list.svg', () => 'ListSVG');
+jest.mock('@/assets/easy.svg', () => 'EasySVG');
+jest.mock('@/assets/ingredients.svg', () => 'IngredientsSVG');
+jest.mock('@/assets/fire.svg', () => 'FireSVG');
+jest.mock('@/assets/time.svg', () => 'TimeSVG');
+
+jest.mock('@/assets/hard.svg', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return () => <Text>HardSVG</Text>;
+});
+
+jest.mock('@/assets/medium.svg', () => {
+  const React = require('react');
+  const { Text } = require('react-native');
+  return () => <Text>MediumSVG</Text>;
+});
 
 const mockedShowToast = jest.fn();
 jest.mock('@/contexts/Toast', () => ({
   useToast: () => ({ showToast: mockedShowToast }),
   ToastProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
+
+jest.mock('@/components/Rate', () => {
+  const { View, Text, Button } = require('react-native');
+  return {
+    Rate: ({ visible, onClose, recipeId }: any) =>
+      visible ? (
+        <View testID="rate-modal">
+          <Text>Rate Modal - {recipeId}</Text>
+          <Button title="Close Modal" onPress={onClose} />
+        </View>
+      ) : null,
+  };
+});
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -203,6 +235,8 @@ describe('Recipe screen', () => {
           { id: 'inst2', text: 'Put in the oven', step: 'Step 2' },
           { id: 'inst3', text: 'Wait to cool down', step: 'Step 2' },
         ],
+        rating: 0,
+        user_rating: 0,
       },
       isLoading: false,
       error: null,
@@ -216,12 +250,15 @@ describe('Recipe screen', () => {
       expect(screen.getByTestId('header-title').children).toContain('Recipe Test');
     });
 
-    expect(screen.getByText('3 ingredientes')).toBeTruthy();
-    expect(screen.getByText('Tempo de preparo: 45 minutos')).toBeTruthy();
-    expect(screen.getByText('Dificuldade da receita: Fácil')).toBeTruthy();
-    expect(screen.getByText('Calorias por porção: 200')).toBeTruthy();
-    expect(screen.getByTestId('food-type-1')).toBeTruthy();
-    expect(screen.getByTestId('food-type-2')).toBeTruthy();
+    expect(screen.getByText('3')).toBeTruthy();
+    expect(screen.getByText('Ingredientes')).toBeTruthy();
+    expect(screen.getByText('Tempo de preparo')).toBeTruthy();
+    expect(screen.getByText('45 minutos')).toBeTruthy();
+    expect(screen.getByText('Fácil')).toBeTruthy();
+    expect(screen.getByText('Calorias')).toBeTruthy();
+    expect(screen.getByText('200')).toBeTruthy();
+    expect(screen.getByText('Sweet')).toBeTruthy();
+    expect(screen.getByText('Snack')).toBeTruthy();
     expect(screen.getByText('Testing observations')).toBeTruthy();
 
     const ingredientItems = screen.getAllByTestId('ingredient-item');
@@ -233,7 +270,6 @@ describe('Recipe screen', () => {
     expect(instructionItem1).toBeTruthy();
     expect(instructionItem2).toBeTruthy();
     expect(instructionItem3).toBeTruthy();
-
     expect(screen.getByText('1. Mix everything - unchecked')).toBeTruthy();
     expect(screen.getByText('2. Put in the oven - unchecked')).toBeTruthy();
     expect(screen.getByText('3. Wait to cool down - unchecked')).toBeTruthy();
@@ -255,6 +291,8 @@ describe('Recipe screen', () => {
           { id: 'i1', text: 'Do step 1', step: 'Step 1' },
           { id: 'i2', text: 'Do step 2', step: 'Step 2' },
         ],
+        rating: 0,
+        user_rating: 0,
       },
       isLoading: false,
       error: null,
@@ -293,6 +331,8 @@ describe('Recipe screen', () => {
         observation: '',
         ingredients: [],
         instructions: [],
+        rating: 0,
+        user_rating: 0,
       },
       isLoading: false,
       error: null,
@@ -320,6 +360,8 @@ describe('Recipe screen', () => {
         observation: '',
         ingredients: [],
         instructions: [],
+        rating: 0,
+        user_rating: 0,
       },
       isLoading: false,
       error: null,
@@ -359,6 +401,8 @@ describe('Recipe screen', () => {
         observation: '',
         ingredients: [],
         instructions: [],
+        rating: 0,
+        user_rating: 0,
       },
       isLoading: false,
       error: null,
@@ -409,6 +453,38 @@ describe('Recipe screen', () => {
     expect(favoriteRecipe).not.toHaveBeenCalled();
     expect(unfavoriteRecipe).not.toHaveBeenCalled();
     expect(screen.getByText('Not Favorite')).toBeTruthy();
+  });
+
+  it('should render rating stars correctly when rating is non-zero', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'rating-test' });
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: 'rating-test',
+        name: 'Rating Test Recipe',
+        cover: '/cover.jpg',
+        total_ingredients: 2,
+        time: 30,
+        difficulty: 'Fácil',
+        calories: 100,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+        rating: 3.5,
+        user_rating: 1,
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+
+    renderRecipe();
+
+    await waitFor(() => {
+      expect(screen.getByText('(3.5)')).toBeTruthy();
+    });
+    expect(screen.getByText('star-half-outline')).toBeTruthy();
   });
 
   it('should check instructions when pressing each step and test handleToggleInstruction', async () => {
@@ -467,7 +543,7 @@ describe('Recipe screen', () => {
 
     renderRecipe();
 
-    expect(useRecipeById).toHaveBeenCalledWith('456', true);
+    expect(useRecipeById).toHaveBeenCalledWith('456', true, null);
   });
 
   it('should handle error when toggling favorite (favorite -> error)', async () => {
@@ -483,6 +559,8 @@ describe('Recipe screen', () => {
         observation: '',
         ingredients: [],
         instructions: [],
+        rating: 0,
+        user_rating: 0,
       },
       isLoading: false,
       error: null,
@@ -518,6 +596,8 @@ describe('Recipe screen', () => {
         observation: '',
         ingredients: [],
         instructions: [],
+        rating: 0,
+        user_rating: 0,
       },
       isLoading: false,
       error: null,
@@ -538,5 +618,213 @@ describe('Recipe screen', () => {
     await waitFor(() => {
       expect(console.error).toHaveBeenCalledWith('Error toggling favorite:', expect.any(Error));
     });
+  });
+
+  it('should render Hard icon if difficulty is "Difícil"', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: '123' });
+
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: '123',
+        name: 'Recipe Hard Test',
+        cover: '',
+        total_ingredients: 0,
+        time: null,
+        difficulty: 'Difícil',
+        calories: null,
+        rating: 0,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+        user_rating: 0,
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+
+    renderRecipe();
+
+    await waitFor(() => {
+      expect(screen.getByText('HardSVG')).toBeTruthy();
+    });
+  });
+
+  it('should render Medium icon if difficulty is "Intermediário"', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: '456' });
+
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: '456',
+        name: 'Recipe Medium Test',
+        cover: '',
+        total_ingredients: 0,
+        time: null,
+        difficulty: 'Intermediário',
+        calories: null,
+        rating: 0,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+        user_rating: 0,
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+
+    renderRecipe();
+
+    await waitFor(() => {
+      expect(screen.getByText('MediumSVG')).toBeTruthy();
+    });
+  });
+
+  it('should open the Rate modal when pressing "Avaliar receita"', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'OPEN-MODAL' });
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: 'OPEN-MODAL',
+        name: 'Recipe to Open Modal',
+        cover: '',
+        total_ingredients: 2,
+        time: 15,
+        difficulty: 'Fácil',
+        calories: 100,
+        rating: 0,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+        user_rating: 0,
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+
+    renderRecipe();
+
+    expect(screen.queryByTestId('rate-modal')).toBeNull();
+
+    fireEvent.press(screen.getByText('Avaliar receita'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('rate-modal')).toBeTruthy();
+    });
+  });
+
+  it('should close the Rate modal when handleCloseRateModal is called', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'CLOSE-MODAL' });
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: 'OPEN-MODAL',
+        name: 'Recipe to Close Modal',
+        cover: '',
+        total_ingredients: 2,
+        time: 15,
+        difficulty: 'Fácil',
+        calories: 100,
+        rating: 0,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+        user_rating: 0,
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+
+    renderRecipe();
+
+    fireEvent.press(screen.getByText('Avaliar receita'));
+
+    await waitFor(() => {
+      expect(screen.getByTestId('rate-modal')).toBeTruthy();
+    });
+
+    fireEvent.press(screen.getByText('Close Modal'));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('rate-modal')).toBeNull();
+    });
+  });
+
+  it('should render the user rate as "2 estrelas" when userRate > 1', async () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'userRateTest' });
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: 'userRateTest',
+        name: 'Recipe with Rating',
+        cover: '/cover.jpg',
+        total_ingredients: 2,
+        time: 30,
+        difficulty: 'Fácil',
+        calories: 100,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+        rating: 4,
+        user_rating: 2,
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+
+    renderRecipe();
+
+    await waitFor(() => {
+      expect(screen.getByText('2 estrelas')).toBeTruthy();
+    });
+  });
+
+  it('should render the evaluation button as disabled with offline style when isOffline is true', async () => {
+    (useOfflineStore as unknown as jest.Mock).mockReturnValue({
+      isOffline: true,
+      setIsOffline: jest.fn(),
+    });
+    (useLocalSearchParams as jest.Mock).mockReturnValue({ id: 'offlineTest' });
+    (useRecipeById as jest.Mock).mockReturnValue({
+      data: {
+        id: 'offlineTest',
+        name: 'Offline Recipe',
+        cover: '/cover.jpg',
+        total_ingredients: 2,
+        time: 30,
+        difficulty: 'Fácil',
+        calories: 100,
+        food_types: [],
+        observation: '',
+        ingredients: [],
+        instructions: [],
+        rating: 0,
+        user_rating: 0,
+      },
+      isLoading: false,
+      error: null,
+      refetch: jest.fn(),
+    });
+    (getFavoriteRecipeById as jest.Mock).mockResolvedValue(false);
+
+    renderRecipe();
+
+    const disabledPressable = screen.getByA11yState({ disabled: true });
+    expect(disabledPressable).toBeTruthy();
+    const { Text } = require('react-native');
+    const textComponent = disabledPressable.findByType(Text);
+    expect(textComponent.props.children).toBe('Avaliar receita');
   });
 });
