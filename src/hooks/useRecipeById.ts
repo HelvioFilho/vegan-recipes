@@ -36,9 +36,14 @@ export type RecipeProps = {
   ingredients: Ingredient[];
   instructions: Instruction[];
   food_types: FoodType[];
+  user_rating: number;
 };
 
-export async function fetchRecipeById(id?: string, isOffline?: boolean): Promise<RecipeProps> {
+export async function fetchRecipeById(
+  id?: string,
+  isOffline?: boolean,
+  userId?: string
+): Promise<RecipeProps> {
   const IMAGE_URL = process.env.EXPO_PUBLIC_IMAGE_URL;
 
   if (!id) {
@@ -53,15 +58,15 @@ export async function fetchRecipeById(id?: string, isOffline?: boolean): Promise
     }
   }
 
-  const response = await api.get<RecipeProps>(`/recipes/${id}`);
+  const response = await api.get<RecipeProps>(`/recipes/${id}/${userId}`);
 
   return { ...response.data, cover: `${IMAGE_URL}/${response.data.cover}` };
 }
 
-export function useRecipeById(id?: string, isOffline?: boolean) {
+export function useRecipeById(id?: string, isOffline?: boolean, userId?: string) {
   return useQuery<RecipeProps>({
     queryKey: ['recipeById', id],
-    queryFn: () => fetchRecipeById(id, isOffline),
+    queryFn: () => fetchRecipeById(id, isOffline, userId),
     enabled: !!id,
   });
 }
