@@ -38,6 +38,7 @@ describe('useRecipeById Hook', () => {
     difficulty: 'Intermediário',
     calories: '200-250 Kcal',
     observation: null,
+    user_rating: 0,
     ingredients: [
       {
         id: '9',
@@ -70,7 +71,7 @@ describe('useRecipeById Hook', () => {
   it('should successfully fetch a recipe by ID', async () => {
     mockedApi.get.mockResolvedValueOnce({ data: mockRecipe });
 
-    const { result, unmount } = renderHook(() => useRecipeById('2'), {
+    const { result, unmount } = renderHook(() => useRecipeById('2', false, '109'), {
       wrapper: Wrapper,
     });
 
@@ -81,7 +82,7 @@ describe('useRecipeById Hook', () => {
     const expectedRecipe = { ...mockRecipe, cover: 'undefined/2-bife-a-milanesa.jpg' };
 
     expect(result.current.data).toEqual(expectedRecipe);
-    expect(mockedApi.get).toHaveBeenCalledWith('/recipes/2');
+    expect(mockedApi.get).toHaveBeenCalledWith('/recipes/2/109');
     unmount();
   });
 
@@ -100,16 +101,17 @@ describe('useRecipeById Hook', () => {
       ingredients: [],
       instructions: [],
       food_types: [],
+      user_rating: 0,
     };
 
     (getFavoriteRecipeById as jest.Mock).mockResolvedValueOnce(fakeLocalRecipe);
 
-    const result1 = await fetchRecipeById('2', true);
+    const result1 = await fetchRecipeById('2', true, '12');
 
     expect(result1).toEqual(fakeLocalRecipe);
 
     (getFavoriteRecipeById as jest.Mock).mockResolvedValueOnce(fakeLocalRecipe);
-    const result2 = await fetchRecipeById('2', false);
+    const result2 = await fetchRecipeById('2', false, '12');
 
     expect(result2).toEqual(fakeLocalRecipe);
   });
@@ -161,12 +163,13 @@ describe('useRecipeById Hook', () => {
       ingredients: [],
       instructions: [],
       food_types: [],
+      user_rating: 0,
     };
     (api.get as jest.Mock).mockResolvedValueOnce({ data: apiRecipe });
 
-    const result = await fetchRecipeById('99', true);
+    const result = await fetchRecipeById('99', true, '19');
 
-    expect(api.get).toHaveBeenCalledWith('/recipes/99');
+    expect(api.get).toHaveBeenCalledWith('/recipes/99/19');
     expect(result).toEqual({
       ...apiRecipe,
       cover: `undefined/${apiRecipe.cover}`,
