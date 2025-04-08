@@ -105,6 +105,8 @@ jest.mock('@/hooks/useSearchRecipes', () => ({
   useInfiniteSearchRecipes: jest.fn(),
 }));
 
+jest.mock('@/assets/stars.svg', () => 'StarsSVG');
+
 const createTestQueryClient = () =>
   new QueryClient({
     defaultOptions: { queries: { retry: false } },

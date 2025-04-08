@@ -11,6 +11,8 @@ jest.mock('expo-router', () => ({
   useFocusEffect: jest.fn(),
 }));
 
+jest.mock('@/assets/stars.svg', () => 'StarsSVG');
+
 describe('Favorite screen', () => {
   beforeEach(() => {
     jest.clearAllMocks();

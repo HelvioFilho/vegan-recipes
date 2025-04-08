@@ -1,5 +1,5 @@
 import Home from '@/app/(tabs)/index';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react-native';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useInfiniteRecipes } from '@/hooks/useInfiniteRecipes';
@@ -56,6 +56,7 @@ jest.mock('@/components/ErrorCard', () => {
     ),
   };
 });
+jest.mock('@/assets/stars.svg', () => 'StarsSVG');
 
 const createTestQueryClient = () =>
   new QueryClient({
@@ -248,7 +249,7 @@ describe('Home screen', () => {
     expect(__mockReplace).toHaveBeenCalledWith('/(tabs)/favorite');
   });
 
-  it('should call refetch when the refresh button in ErrorCard is pressed', () => {
+  it('should call refetch when the refresh button in ErrorCard is pressed', async () => {
     const refetchMock = jest.fn();
     (useInfiniteRecipes as jest.Mock).mockReturnValue({
       data: null,
@@ -261,8 +262,11 @@ describe('Home screen', () => {
     });
 
     renderHome();
-    const refreshButton = screen.getByTestId('errorcard-refresh-button');
-    fireEvent.press(refreshButton);
+    await act(async () => {
+      const refreshButton = screen.getByTestId('errorcard-refresh-button');
+      fireEvent.press(refreshButton);
+    });
+
     expect(refetchMock).toHaveBeenCalledTimes(1);
   });
 });
