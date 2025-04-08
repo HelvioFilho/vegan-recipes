@@ -6,6 +6,10 @@ import { RecipeProps } from '@/hooks/useInfiniteRecipes';
 
 import formatTime from '@/utils/formatTime';
 
+import { colors } from '@/styles/colors';
+
+import Stars from '@/assets/stars.svg';
+
 type RecipeListProps = {
   data: RecipeProps;
   previousRoute?: string;
@@ -32,6 +36,10 @@ export function RecipeList({ data, previousRoute = '', offline = false }: Recipe
       activeOpacity={0.8}
       onPress={handleRecipe}>
       <Image source={{ uri: cover }} className="h-64 w-full rounded-2xl" resizeMode="cover" />
+      <View className="absolute bottom-1 right-5 z-50 flex-row items-center rounded-br-lg px-2 py-1">
+        <Stars width={27} height={27} color={colors.yellow[500]} fill={colors.yellow[500]} />
+        <Text className="ml-1 self-end font-bold text-lg text-white-100">{`${data.rating === '0.00' ? ' - ' : data.rating}`}</Text>
+      </View>
       <View className="absolute bottom-0 left-0 z-50 px-7 py-3">
         <Text className="font-bold text-xl text-white-100" numberOfLines={1} ellipsizeMode="tail">
           {data.name}
