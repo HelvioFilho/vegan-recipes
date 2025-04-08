@@ -26,7 +26,7 @@
 - [x] Mark recipes as favorites to save them for later
 - [x] Search recipes by name, difficulty, or category
 - [x] Access your saved favorites offline
-- [ ] Rate and provide feedback on recipes
+- [x] Rate and provide feedback on recipes
 
 ## Technologies
 
