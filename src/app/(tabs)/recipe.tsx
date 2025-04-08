@@ -1,15 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, Image, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 
 import { Header } from '@/components/Header';
 import { ErrorCard } from '@/components/ErrorCard';
 import { Ingredients } from '@/components/Ingredients';
 import { Instructions } from '@/components/Instructions';
+import { Rate } from '@/components/Rate';
 
 import { useToast } from '@/contexts/Toast';
 import formatTime from '@/utils/formatTime';
+import { useUserStore } from '@/store/userStore';
 import { useOfflineStore } from '@/store/offlineStore';
 import { Ingredient, Instruction, useRecipeById } from '@/hooks/useRecipeById';
 import { favoriteRecipe, getFavoriteRecipeById, unfavoriteRecipe } from '@/services/favoritesLocal';
@@ -20,19 +30,57 @@ import Kitchen from '@/assets/kitchen.svg';
 import Pan from '@/assets/pan.svg';
 import List from '@/assets/list.svg';
 
+import Easy from '@/assets/easy.svg';
+import Medium from '@/assets/medium.svg';
+import Hard from '@/assets/hard.svg';
+import IngredientsImage from '@/assets/ingredients.svg';
+import Fire from '@/assets/fire.svg';
+import Time from '@/assets/time.svg';
+
 type SearchParams = {
   id: string;
 };
 
+type RecipeSection = {
+  title: string;
+  data: (Ingredient | Instruction)[];
+  type: 'ingredient' | 'instruction' | 'separator';
+};
+
+type RecipeSectionData = RecipeSection & {
+  renderItem: (info: {
+    item: Ingredient | Instruction;
+    index: number;
+  }) => React.ReactElement | null;
+  renderSectionHeader: () => React.ReactElement;
+};
+
 export default function Recipe() {
   const { isOffline } = useOfflineStore();
+  const { userId } = useUserStore();
+
   const { id } = useLocalSearchParams<SearchParams>();
-  const { data: food, isLoading, error, refetch } = useRecipeById(id, isOffline);
+  const { data: food, isLoading, error, refetch } = useRecipeById(id, isOffline, userId as string);
   const [favorite, setFavorite] = useState(false);
   const [highestCheckedStep, setHighestCheckedStep] = useState(0);
   const { showToast } = useToast();
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [rate, setRate] = useState(0);
+  const [userRate, setUserRate] = useState(0);
+
+  const fullStars = Math.floor(rate);
+  const hasHalfStar = rate - fullStars >= 0.5 && fullStars < 5;
+
   let globalInstructionIndex = 0;
+
+  const changeRate = (newRate: number) => {
+    setRate(newRate);
+  };
+
+  const changeUserRate = (newRate: number) => {
+    setUserRate(newRate);
+  };
 
   const checkFavorite = async () => {
     if (id) {
@@ -72,7 +120,9 @@ export default function Recipe() {
 
   useEffect(() => {
     checkFavorite();
-  }, [id]);
+    changeRate(Number(food?.rating) || 0);
+    changeUserRate(Number(food?.user_rating) || 0);
+  }, [id, food]);
 
   if (isLoading) {
     return (
@@ -115,6 +165,11 @@ export default function Recipe() {
       },
       {} as Record<string, Instruction[]>
     );
+
+  const handleCloseRateModal = () => {
+    setModalVisible(false);
+  };
+
   return (
     <SafeAreaView className="flex-1">
       <Header title={food?.name as string} favorite={favorite} handleFavorite={handleFavorite} />
@@ -122,6 +177,37 @@ export default function Recipe() {
         className="bg-gray-300"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1 }}>
+        {Math.floor(rate) > 0 && (
+          <View className="my-2 flex-row items-center justify-center gap-2">
+            {Array.from({ length: 5 }, (_, index) => {
+              const starNumber = index + 1;
+              if (starNumber <= fullStars) {
+                return (
+                  <Ionicons key={starNumber} name="star" size={30} color={colors.yellow[500]} />
+                );
+              } else if (starNumber === fullStars + 1 && hasHalfStar) {
+                return (
+                  <Ionicons
+                    key={starNumber}
+                    name="star-half-outline"
+                    size={30}
+                    color={colors.yellow[500]}
+                  />
+                );
+              } else {
+                return (
+                  <Ionicons
+                    key={starNumber}
+                    name="star-outline"
+                    size={30}
+                    color={colors.yellow[500]}
+                  />
+                );
+              }
+            })}
+            <Text className="self-end font-bold text-lg">({rate})</Text>
+          </View>
+        )}
         <Image
           testID="recipe-cover"
           className="mt-3 h-72 w-full rounded-t-2xl"
@@ -130,34 +216,71 @@ export default function Recipe() {
           role="img"
           aria-label={food?.name}
         />
-        <View className="flex-row items-center justify-between px-4 py-3">
-          <View className="flex-1">
-            <Text className="mb-1 mt-2 font-bold text-lg text-black-900">{food?.name}</Text>
-            <View className="gap-1">
-              <Text className="font-regular text-base text-black-900">
-                {food?.total_ingredients} ingredientes
-              </Text>
-              <Text className="font-regular text-base text-black-900">
-                Tempo de preparo: {formatTime(food?.time ? Number(food.time) : 0)}
-              </Text>
-              <Text className="font-regular text-base text-black-900">
-                Dificuldade da receita: {food?.difficulty}
-              </Text>
-              <Text className="font-regular text-base text-black-900">
-                Calorias por porção: {food?.calories ? food.calories : 'Não consta na receita'}
-              </Text>
+        <View className="p-4">
+          <Text className="mb-4 font-bold text-xl">{food?.name}</Text>
+          <View className="flex-row flex-wrap justify-center gap-3 ">
+            <View className="w-[47%] items-center rounded-md bg-gray-100 p-3">
+              <IngredientsImage width={35} height={35} fill={colors.green[900]} />
+              <View className="mt-3 flex-row items-center justify-center gap-2">
+                <Text className="text-md font-semibold">{food?.total_ingredients}</Text>
+                <Text className="font-semibold">Ingredientes</Text>
+              </View>
             </View>
-            <View className="my-2 flex-row gap-2">
-              {food?.food_types.map((foodType) => (
-                <View
-                  key={foodType.id}
-                  testID={`food-type-${foodType.id}`}
-                  accessibilityLabel={foodType.name}
-                  className="mt-2 flex-row items-center  rounded-3xl bg-gray-200 px-5 py-2">
-                  <Text className="text-base font-semibold text-black-900">{foodType.name}</Text>
-                </View>
-              ))}
+            <View className="w-[47%] items-center rounded-md bg-gray-100 px-3">
+              {food?.difficulty === 'Difícil' ? (
+                <Hard width={55} height={55} />
+              ) : food?.difficulty === 'Intermediário' ? (
+                <Medium width={55} height={55} />
+              ) : (
+                <Easy width={55} height={55} />
+              )}
+              <Text className="relative -top-1 font-bold text-lg">{food?.difficulty}</Text>
             </View>
+            <View className="w-[47%] items-center rounded-md bg-gray-100 p-3">
+              <Time width={35} height={35} fill={colors.green[900]} />
+              <View className="mt-2 items-center justify-center">
+                <Text className="font-semibold">Tempo de preparo</Text>
+                <Text className="text-md font-semibold">
+                  {formatTime(food?.time ? Number(food.time) : 0)}
+                </Text>
+              </View>
+            </View>
+            <View className="w-[47%] items-center rounded-md bg-gray-100 p-3">
+              <Fire width={35} height={35} fill={colors.green[900]} color={colors.green[900]} />
+              <View className="mt-2 items-center justify-center">
+                <Text className="font-semibold">Calorias</Text>
+                <Text className="text-md font-semibold">{food?.calories ?? '-'}</Text>
+              </View>
+            </View>
+            <View className="w-[47%] items-center rounded-md bg-gray-100 p-3">
+              <MaterialCommunityIcons name="star" size={35} color={colors.green[900]} />
+              <View className="mt-2 items-center justify-center">
+                <Text className="font-semibold">Sua avaliação</Text>
+                <Text className="text-md font-semibold">{`${userRate === 0 ? '-' : userRate === 1 ? userRate + ' estrela' : userRate + ' estrelas'}`}</Text>
+              </View>
+            </View>
+            <View className="w-[47%] items-center justify-center rounded-md  p-3">
+              <Pressable
+                className={`mt-3 flex-row items-center rounded-full 
+                  ${isOffline ? 'bg-gray-500' : 'bg-green-600'} px-4 py-2`}
+                onPress={() => setModalVisible(true)}
+                disabled={isOffline}
+                aria-disabled={isOffline}>
+                <Text className="font-bold text-base text-white-100">{`${userRate === 0 ? 'Avaliar receita' : 'alterar avaliação'}`}</Text>
+              </Pressable>
+            </View>
+          </View>
+          <Text className="mb-2 mt-4 text-center font-bold text-2xl text-black-900">
+            Tipo de comida
+          </Text>
+          <View className="mt-3 flex-row flex-wrap justify-center">
+            {food?.food_types.map((type) => (
+              <View
+                key={type.id}
+                className="mb-2 mr-2 items-center justify-center rounded-md bg-gray-500 px-5 py-2">
+                <Text className="text-md font-medium text-white-100">{type.name}</Text>
+              </View>
+            ))}
           </View>
         </View>
         {food?.observation && (
@@ -213,6 +336,16 @@ export default function Recipe() {
             </View>
           ))}
       </ScrollView>
+      <Rate
+        testID="rate-modal"
+        visible={modalVisible}
+        onClose={handleCloseRateModal}
+        setNewRating={changeRate}
+        recipeId={food?.id as string}
+        userId={userId}
+        initialRating={userRate}
+        setUserRate={changeUserRate}
+      />
     </SafeAreaView>
   );
 }
