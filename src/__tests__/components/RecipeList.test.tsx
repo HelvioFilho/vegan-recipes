@@ -15,6 +15,8 @@ jest.mock('expo-linear-gradient', () => ({
   },
 }));
 
+jest.mock('@/assets/stars.svg', () => 'StarsSVG');
+
 describe('RecipeList component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -55,5 +57,15 @@ describe('RecipeList component', () => {
 
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenCalledWith('/recipe?id=123&previousRoute=some-route');
+  });
+
+  it('should render " - " when data.rating is "0.00"', () => {
+    const recipeWithZeroRating: RecipeProps = {
+      ...mockRecipe,
+      rating: '0.00',
+    };
+
+    const { getByText } = render(<RecipeList data={recipeWithZeroRating} />);
+    expect(getByText(' - ')).toBeTruthy();
   });
 });
